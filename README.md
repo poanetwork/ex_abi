@@ -1,16 +1,16 @@
-# ABI
+# ExABI
 
 The [Application Binary Interface](https://solidity.readthedocs.io/en/develop/abi-spec.html) (ABI) of Solidity describes how to transform binary data to types which the Solidity programming language understands. For instance, if we want to call a function `bark(uint32,bool)` on a Solidity-created contract `contract Dog`, what `data` parameter do we pass into our Ethereum transaction? This project allows us to encode such function calls.
 
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `abi` to your list of dependencies in `mix.exs`:
+by adding `ex_abi` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:abi, "~> 0.1.8"}
+    {:ex_abi, "~> 0.1.12"}
   ]
 end
 ```
@@ -77,7 +77,3 @@ Currently supports:
 * [Solidity Docs](https://solidity.readthedocs.io/)
 * [Solidity Grammar](https://github.com/ethereum/solidity/blob/develop/docs/grammar.txt)
 * [Exthereum Blockchain](https://github.com/exthereum/blockchain)
-
-# Collaboration
-
-This ABI library is licensed under the MIT license. Feel free to submit issues, pull requests or fork the code as you wish.

@@ -2,14 +2,14 @@ defmodule ABI.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :abi,
+    [app: :ex_abi,
      version: "0.1.12",
-      elixir: "~> 1.4",
+      elixir: "~> 1.6",
       description: "Ethereum's ABI Interface",
       package: [
-        maintainers: ["Geoffrey Hayes", "Mason Fischer"],
-        licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/exthereum/abi"}
+        maintainers: ["Ayrat Badykov"],
+        licenses: ["GPL-3.0"],
+        links: %{"GitHub" => "https://github.com/poanetwork/ex_abi"}
       ],
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
