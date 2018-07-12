@@ -27,6 +27,20 @@ defmodule ABI.TypeDecoder do
       ...>    )
       [69, true]
 
+      iex> "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd6"
+      ...> |> Base.decode16!(case: :lower)
+      ...> |> ABI.TypeDecoder.decode(
+      ...>      %ABI.FunctionSelector{
+      ...>        function: "baz",
+      ...>        types: [
+      ...>          {:int, 8}
+      ...>        ],
+      ...>        returns: :int
+      ...>      }
+      ...>    )
+      [-42]
+
+
       iex> "000000000000000000000000000000000000000000000000000000000000000b68656c6c6f20776f726c64000000000000000000000000000000000000000000"
       ...> |> Base.decode16!(case: :lower)
       ...> |> ABI.TypeDecoder.decode(
@@ -168,6 +182,10 @@ defmodule ABI.TypeDecoder do
     decode_uint(data, size_in_bits)
   end
 
+  defp decode_type({:int, size_in_bits}, data) do
+    decode_int(data, size_in_bits)
+  end
+
   defp decode_type(:address, data), do: decode_bytes(data, 20, :left)
 
   defp decode_type(:bool, data) do
@@ -256,6 +274,12 @@ defmodule ABI.TypeDecoder do
     total_bit_size = size_in_bits + ExthCrypto.Math.mod(256 - size_in_bits, 256)
 
     <<value::integer-size(total_bit_size), rest::binary>> = data
+
+    {value, rest}
+  end
+
+  defp decode_int(data, _size_in_bits) do
+    <<value::signed-256, rest::binary>> = data
 
     {value, rest}
   end

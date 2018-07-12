@@ -24,6 +24,20 @@ defmodule ABI.TypeEncoder do
       ...> |> Base.encode16(case: :lower)
       "cdcd77c000000000000000000000000000000000000000000000000000000000000000450000000000000000000000000000000000000000000000000000000000000001"
 
+      iex> [-5678, true]
+      ...> |> ABI.TypeEncoder.encode(
+      ...>      %ABI.FunctionSelector{
+      ...>        function: "baz",
+      ...>        types: [
+      ...>          {:int, 256},
+      ...>          :bool
+      ...>        ],
+      ...>        returns: :bool
+      ...>      }
+      ...>    )
+      ...> |> Base.encode16(case: :lower)
+      "d7aeca2bffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe9d20000000000000000000000000000000000000000000000000000000000000001"
+
       iex> ["hello world"]
       ...> |> ABI.TypeEncoder.encode(
       ...>      %ABI.FunctionSelector{
@@ -148,6 +162,10 @@ defmodule ABI.TypeEncoder do
     {encode_uint(data, size), rest}
   end
 
+  defp encode_type({:int, size}, [data | rest]) do
+    {encode_int(data, size), rest}
+  end
+
   defp encode_type(:address, data), do: encode_type({:uint, 160}, data)
 
   defp encode_type(:bool, [data | rest]) do
@@ -242,6 +260,23 @@ defmodule ABI.TypeEncoder do
         )
 
     bin |> pad(size_in_bytes, :left)
+  end
+
+  defp encode_int(data, size_in_bits) when rem(size_in_bits, 8) == 0 do
+    if signed_overflow?(data, size_in_bits) do
+      raise(
+        "Data overflow encoding int, data `#{data}` cannot fit in #{size_in_bits} bits"
+      )
+    end
+
+    encode_int(data)
+  end
+
+  # encoding with integer-signed-256 we already get the right padding
+  defp encode_int(data), do: <<data::signed-256>>
+
+  defp signed_overflow?(n, max_bits) do
+    n < (:math.pow(2, max_bits-1) * -1) + 1 || n > (:math.pow(2, max_bits-1)) - 1
   end
 
   defp pad(bin, size_in_bytes, direction) do
