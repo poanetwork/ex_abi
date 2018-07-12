@@ -1,3 +1,5 @@
+# 0.1.13
+* Add `int` support (https://github.com/poanetwork/ex_abi/pull/3)
 # 0.1.12
 * Fix `string` decoding to truncate on encountering NUL
 * Fix some edge-cases in `tuple` encoding/decoding

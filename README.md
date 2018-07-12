@@ -59,6 +59,7 @@ Currently supports:
   * [X] `int<M>`
   * [X] `address`
   * [X] `uint`
+  * [X] `int`
   * [X] `bool`
   * [ ] `fixed<M>x<N>`
   * [ ] `ufixed<M>x<N>`

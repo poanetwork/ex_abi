@@ -2,8 +2,9 @@ defmodule ABI.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :ex_abi,
-     version: "0.1.12",
+    [
+      app: :ex_abi,
+      version: "0.1.13",
       elixir: "~> 1.6",
       description: "Ethereum's ABI Interface",
       package: [
@@ -11,9 +12,10 @@ defmodule ABI.Mixfile do
         licenses: ["GPL-3.0"],
         links: %{"GitHub" => "https://github.com/poanetwork/ex_abi"}
       ],
-      build_embedded: Mix.env == :prod,
-      start_permanent: Mix.env == :prod,
-      deps: deps()]
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
+      deps: deps()
+    ]
   end
 
   # Run "mix help compile.app" to learn about applications.
