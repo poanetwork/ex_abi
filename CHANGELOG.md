@@ -1,3 +1,5 @@
+# 0.1.14
+* Fix handling of decoding data with dynamic types (https://github.com/poanetwork/ex_abi/pull/5)
 # 0.1.13
 * Add `int` support (https://github.com/poanetwork/ex_abi/pull/3)
 # 0.1.12
