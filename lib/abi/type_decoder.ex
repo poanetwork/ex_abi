@@ -6,6 +6,8 @@ defmodule ABI.TypeDecoder do
   specification.
   """
 
+  alias ABI.FunctionSelector
+
   @doc """
   Decodes the given data based on the function selector.
 
@@ -41,7 +43,7 @@ defmodule ABI.TypeDecoder do
       [-42]
 
 
-      iex> "000000000000000000000000000000000000000000000000000000000000000b68656c6c6f20776f726c64000000000000000000000000000000000000000000"
+      iex> "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b68656c6c6f20776f726c64000000000000000000000000000000000000000000"
       ...> |> Base.decode16!(case: :lower)
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
@@ -65,19 +67,7 @@ defmodule ABI.TypeDecoder do
       ...>    )
       [{17, true}]
 
-      iex> "00000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
-      ...> |> Base.decode16!(case: :lower)
-      ...> |> ABI.TypeDecoder.decode(
-      ...>      %ABI.FunctionSelector{
-      ...>        function: nil,
-      ...>        types: [
-      ...>          {:array, {:uint, 32}, 2}
-      ...>        ]
-      ...>      }
-      ...>    )
-      [[17, 1]]
-
-      iex> "000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
+      iex> "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
       ...> |> Base.decode16!(case: :lower)
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
@@ -89,13 +79,13 @@ defmodule ABI.TypeDecoder do
       ...>    )
       [[17, 1]]
 
-      iex> "0000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000011020000000000000000000000000000000000000000000000000000000000000"
+      iex> "000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000011020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
       ...> |> Base.decode16!(case: :lower)
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
       ...>        function: nil,
       ...>        types: [
-      ...>          {:array, {:uint, 32}, 2},
+      ...>          {:array, {:uint, 32}},
       ...>          :bool,
       ...>          {:bytes, 2}
       ...>        ]
@@ -103,7 +93,7 @@ defmodule ABI.TypeDecoder do
       ...>    )
       [[17, 1], true, <<16, 32>>]
 
-      iex> "000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000007617765736f6d6500000000000000000000000000000000000000000000000000"
+      iex> "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000007617765736f6d6500000000000000000000000000000000000000000000000000"
       ...> |> Base.decode16!(case: :lower)
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
@@ -115,7 +105,7 @@ defmodule ABI.TypeDecoder do
       ...>    )
       [{"awesome", true}]
 
-      iex> "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000"
+      iex> "000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
       ...> |> Base.decode16!(case: :lower)
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
@@ -127,7 +117,7 @@ defmodule ABI.TypeDecoder do
       ...>    )
       [{[]}]
 
-      iex> "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000c556e617574686f72697a656400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000204a2bf2ff0a4eaf1890c8d8679eaa446fb852c4000000000000000000000000861d9af488d5fa485bb08ab6912fff4f7450849a"
+      iex> "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000c556e617574686f72697a656400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000204a2bf2ff0a4eaf1890c8d8679eaa446fb852c4000000000000000000000000861d9af488d5fa485bb08ab6912fff4f7450849a"
       ...> |> Base.decode16!(case: :lower)
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
@@ -146,8 +136,8 @@ defmodule ABI.TypeDecoder do
         ]
       }]
   """
-  def decode(encoded_data, function_selector) do
-    decode_raw(encoded_data, function_selector.types)
+  def decode(encoded_data, %FunctionSelector{types: types}) do
+    decode_raw(encoded_data, types)
   end
 
   @doc """
@@ -156,25 +146,111 @@ defmodule ABI.TypeDecoder do
 
   ## Examples
 
-      iex> "000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000007617765736f6d6500000000000000000000000000000000000000000000000000"
+      iex> "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000007617765736f6d6500000000000000000000000000000000000000000000000000"
       ...> |> Base.decode16!(case: :lower)
       ...> |> ABI.TypeDecoder.decode_raw([{:tuple, [:string, :bool]}])
       [{"awesome", true}]
   """
-  def decode_raw(encoded_data, types) do
-    do_decode(types, encoded_data, [])
+  def decode_raw(binary_data, types) do
+    decode_raw(binary_data, types, 0)
   end
 
-  @spec do_decode([ABI.FunctionSelector.type()], binary(), [any()]) :: [any()]
-  defp do_decode([], bin, _) when byte_size(bin) > 0,
-    do: raise("Found extra binary data: #{inspect(bin)}")
+  defp decode_raw(binary_data, types, initial_cursor_offset) do
+    {reversed_result, _} =
+      Enum.reduce(types, {[], initial_cursor_offset}, fn (type, {acc, cursor_offset}) ->
+        do_decode_raw(binary_data, type, cursor_offset, acc)
+      end)
 
-  defp do_decode([], _, acc), do: Enum.reverse(acc)
+    Enum.reverse(reversed_result)
+  end
 
-  defp do_decode([type | remaining_types], data, acc) do
-    {decoded, remaining_data} = decode_type(type, data)
+  defp do_decode_raw(binary_data, type, cursor_offset, acc) do
+    {allocation, current_head_bit_length} = type_metadata(type)
 
-    do_decode(remaining_types, remaining_data, [decoded | acc])
+    <<
+      _prev :: bits-size(cursor_offset),
+      current_head_data :: bits-size(current_head_bit_length),
+      _rest :: binary
+    >> = binary_data
+
+    decoded_data = decode_data(binary_data, type, allocation, current_head_data)
+
+    updated_acc = [decoded_data | acc]
+    next_cursor_offset = cursor_offset + current_head_bit_length
+
+    {updated_acc, next_cursor_offset}
+  end
+
+  defp decode_data(binary_data, type, allocation, head_data)
+
+  defp decode_data(binary_data, {:tuple, sub_types}, :dynamic, head_data) do
+    <<data_offset_byte_length :: integer-size(256) >> = head_data
+    data_offset_bit_length = data_offset_byte_length * 8
+
+    binary_data
+    |> decode_raw(sub_types, data_offset_bit_length)
+    |> List.to_tuple()
+  end
+
+  defp decode_data(_binary_data, {:tuple, sub_types}, :static, head_data) do
+    head_data
+    |> decode_raw(sub_types, 0)
+    |> List.to_tuple()
+  end
+
+  defp decode_data(binary_data, {:array, type}, :dynamic, head_data) do
+    <<data_offset_byte_length :: integer-size(256) >> = head_data
+
+    <<
+      _prev :: bytes-size(data_offset_byte_length),
+      array_length_count :: integer-size(256),
+      _rest :: binary
+    >> = binary_data
+
+    if array_length_count > 0 do
+      types = for _ <- 1..array_length_count, do: type
+      array_data_offset =  (data_offset_byte_length * 8) + 256
+
+      decode_raw(binary_data, types, array_data_offset)
+    else
+      []
+    end
+  end
+
+  defp decode_data(binary_data, type, :dynamic, head_data) do
+    <<data_offset_byte_length :: integer-size(256) >> = head_data
+
+    <<
+      _prev :: bytes-size(data_offset_byte_length),
+      type_data :: binary
+    >> = binary_data
+
+    {decoded_data, _} = decode_type(type, type_data)
+
+    decoded_data
+  end
+
+  defp decode_data(_binary_data, type, :static, head_data) do
+    {decoded_data, _} = decode_type(type, head_data)
+
+    decoded_data
+  end
+
+  defp type_metadata({:tuple, sub_types}) do
+    if Enum.any?(sub_types, &FunctionSelector.is_dynamic?/1) do
+      {:dynamic, 256}
+    else
+      {:static, 256 * length(sub_types)}
+    end
+  end
+  defp type_metadata(type) do
+    type_head_bit_length = 256
+
+    if FunctionSelector.is_dynamic?(type) do
+      {:dynamic, type_head_bit_length}
+    else
+      {:static, type_head_bit_length}
+    end
   end
 
   @spec decode_type(ABI.FunctionSelector.type(), binary()) :: {any(), binary()}
@@ -201,9 +277,17 @@ defmodule ABI.TypeDecoder do
   end
 
   defp decode_type(:string, data) do
-    {string_size_in_bytes, rest} = decode_uint(data, 256)
-    {raw_bytes, rest} = decode_bytes(rest, string_size_in_bytes, :right)
-    {nul_terminate_string(raw_bytes), rest}
+    <<
+      string_length_in_bytes :: integer-size(256),
+      string_data :: binary
+    >> = data
+
+    <<
+      string :: bytes-size(string_length_in_bytes),
+      rest :: binary
+    >> = string_data
+
+    {string, rest}
   end
 
   defp decode_type(:bytes, data) do
@@ -215,53 +299,6 @@ defmodule ABI.TypeDecoder do
 
   defp decode_type({:bytes, size}, data) when size > 0 and size <= 32 do
     decode_bytes(data, size, :right)
-  end
-
-  defp decode_type({:array, type}, data) do
-    {element_count, rest} = decode_uint(data, 256)
-    decode_type({:array, type, element_count}, rest)
-  end
-
-  defp decode_type({:array, _type, 0}, data), do: {[], data}
-
-  defp decode_type({:array, type, element_count}, data) do
-    repeated_type = Enum.map(1..element_count, fn _ -> type end)
-
-    {tuple, rest} = decode_type({:tuple, repeated_type}, data)
-
-    {tuple |> Tuple.to_list(), rest}
-  end
-
-  defp decode_type({:tuple, types}, starting_data) do
-    # First pass, decode static types
-    {elements, rest} =
-      Enum.reduce(types, {[], starting_data}, fn type, {elements, data} ->
-        if ABI.FunctionSelector.is_dynamic?(type) do
-          {tail_position, rest} = decode_type({:uint, 256}, data)
-
-          {[{:dynamic, type, tail_position} | elements], rest}
-        else
-          {el, rest} = decode_type(type, data)
-
-          {[el | elements], rest}
-        end
-      end)
-
-    # Second pass, decode dynamic types
-    {elements, rest} =
-      Enum.reduce(elements |> Enum.reverse(), {[], rest}, fn el, {elements, data} ->
-        case el do
-          {:dynamic, type, _tail_position} ->
-            {el, rest} = decode_type(type, data)
-
-            {[el | elements], rest}
-
-          _ ->
-            {[el | elements], data}
-        end
-      end)
-
-    {elements |> Enum.reverse() |> List.to_tuple(), rest}
   end
 
   defp decode_type(els, _) do
