@@ -24,7 +24,7 @@ defmodule ABI.TypeDecoder do
       ...>          {:uint, 32},
       ...>          :bool
       ...>        ],
-      ...>        returns: :bool
+      ...>        returns: [:bool]
       ...>      }
       ...>    )
       [69, true]
@@ -37,7 +37,7 @@ defmodule ABI.TypeDecoder do
       ...>        types: [
       ...>          {:int, 8}
       ...>        ],
-      ...>        returns: :int
+      ...>        returns: [:int]
       ...>      }
       ...>    )
       [-42]
