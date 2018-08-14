@@ -140,7 +140,13 @@ defmodule ABI.FunctionSelector do
 
   def parse_specification_item(_), do: nil
 
-  defp parse_specification_type(%{"type" => type}), do: decode_type(type)
+  @doc false
+  def parse_specification_type(%{"type" => "tuple", "components" => components}) do
+    sub_types = for component <- components, do: parse_specification_type(component)
+    {:tuple, sub_types}
+  end
+
+  def parse_specification_type(%{"type" => type}), do: decode_type(type)
 
   @doc """
   Decodes the given type-string as a single type.
