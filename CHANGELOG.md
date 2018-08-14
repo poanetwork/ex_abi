@@ -1,3 +1,6 @@
+# 0.1.15
+* Add support for tuple type for inputs and outputs (https://github.com/poanetwork/ex_abi/pull/6)
+* Fix support for fixed-length arrays (https://github.com/poanetwork/ex_abi/pull/7)
 # 0.1.14
 * Fix handling of decoding data with dynamic types (https://github.com/poanetwork/ex_abi/pull/5)
 # 0.1.13
