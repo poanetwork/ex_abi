@@ -217,6 +217,20 @@ defmodule ABI.TypeDecoder do
     end
   end
 
+  defp decode_data(binary_data, {:array, type, count}, :dynamic, head_data) do
+    repeated_type = for _ <- 1..count, do: type
+
+    <<data_offset_byte_length :: integer-size(256) >> = head_data
+    data_offset_bit_length = data_offset_byte_length * 8
+
+    decode_raw(binary_data, repeated_type, data_offset_bit_length)
+  end
+
+  defp decode_data(_binary_data, {:array, type, count}, :static, head_data) do
+    repeated_type = for _ <- 1..count, do: type
+    decode_raw(head_data, repeated_type, 0)
+  end
+
   defp decode_data(binary_data, type, :dynamic, head_data) do
     <<data_offset_byte_length :: integer-size(256) >> = head_data
 
@@ -241,6 +255,13 @@ defmodule ABI.TypeDecoder do
       {:dynamic, 256}
     else
       {:static, 256 * length(sub_types)}
+    end
+  end
+  defp type_metadata({:array, type, count}) do
+    if FunctionSelector.is_dynamic?(type) do
+      {:dynamic, 256}
+    else
+      {:static, 256 * count}
     end
   end
   defp type_metadata(type) do
