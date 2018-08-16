@@ -1,3 +1,5 @@
+# 0.1.16
+* Allow functions to have mutliple output types (https://github.com/poanetwork/ex_abi/pull/8)
 # 0.1.15
 * Add support for tuple type for inputs and outputs (https://github.com/poanetwork/ex_abi/pull/6)
 * Fix support for fixed-length arrays (https://github.com/poanetwork/ex_abi/pull/7)
