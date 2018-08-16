@@ -16,13 +16,20 @@ defmodule ABI.FunctionSelector do
           | {:array, type, non_neg_integer}
           | {:tuple, [type]}
 
+  @typedoc """
+  Struct to represent a function and its input and output types.
+
+  * `:function` - Name of the function
+  * `:types` - Function's input types
+  * `:returns` - Function's return types
+  """
   @type t :: %__MODULE__{
           function: String.t(),
           types: [type],
-          returns: type
+          returns: [type]
         }
 
-  defstruct [:function, :types, :returns]
+  defstruct [:function, types: [], returns: []]
 
   @doc """
   Decodes a function selector to a struct.
@@ -35,7 +42,8 @@ defmodule ABI.FunctionSelector do
         types: [
           {:uint, 256},
           :bool
-        ]
+        ],
+        returns: []
       }
 
       iex> ABI.FunctionSelector.decode("growl(uint,address,string[])")
@@ -45,19 +53,22 @@ defmodule ABI.FunctionSelector do
           {:uint, 256},
           :address,
           {:array, :string}
-        ]
+        ],
+        returns: []
       }
 
       iex> ABI.FunctionSelector.decode("rollover()")
       %ABI.FunctionSelector{
         function: "rollover",
-        types: []
+        types: [],
+        returns: []
       }
 
       iex> ABI.FunctionSelector.decode("do_playDead3()")
       %ABI.FunctionSelector{
         function: "do_playDead3",
-        types: []
+        types: [],
+        returns: []
       }
 
       iex> ABI.FunctionSelector.decode("pet(address[])")
@@ -65,7 +76,8 @@ defmodule ABI.FunctionSelector do
         function: "pet",
         types: [
           {:array, :address}
-        ]
+        ],
+        returns: []
       }
 
       iex> ABI.FunctionSelector.decode("paw(string[2])")
@@ -73,7 +85,8 @@ defmodule ABI.FunctionSelector do
         function: "paw",
         types: [
           {:array, :string, 2}
-        ]
+        ],
+        returns: []
       }
 
       iex> ABI.FunctionSelector.decode("scram(uint256[])")
@@ -81,7 +94,8 @@ defmodule ABI.FunctionSelector do
         function: "scram",
         types: [
           {:array, {:uint, 256}}
-        ]
+        ],
+        returns: []
       }
 
       iex> ABI.FunctionSelector.decode("shake((string))")
@@ -89,7 +103,8 @@ defmodule ABI.FunctionSelector do
         function: "shake",
         types: [
           {:tuple, [:string]}
-        ]
+        ],
+        returns: []
       }
   """
   def decode(signature) do
@@ -126,7 +141,7 @@ defmodule ABI.FunctionSelector do
     %ABI.FunctionSelector{
       function: function_name,
       types: input_types,
-      returns: List.first(output_types)
+      returns: output_types
     }
   end
 
@@ -134,7 +149,7 @@ defmodule ABI.FunctionSelector do
     %ABI.FunctionSelector{
       function: nil,
       types: [],
-      returns: nil
+      returns: []
     }
   end
 
@@ -226,4 +241,19 @@ defmodule ABI.FunctionSelector do
   def is_dynamic?({:array, type, len}) when len > 0, do: is_dynamic?(type)
   def is_dynamic?({:tuple, types}), do: Enum.any?(types, &is_dynamic?/1)
   def is_dynamic?(_), do: false
+
+  @doc false
+  def from_params(params) when is_map(params) do
+    formatted_params =
+      params
+      |> Map.take(~w(function types returns)a)
+      |> Enum.map(&sanitize_param/1)
+
+    struct!(ABI.FunctionSelector, formatted_params)
+  end
+
+  defp sanitize_param({key, nil}) when key in ~w(types returns)a do
+    {key, []}
+  end
+  defp sanitize_param(tuple), do: tuple
 end

@@ -16,7 +16,7 @@ defmodule ABI.Parser do
 
     case ast do
       {:type, type} -> type
-      {:selector, selector_parts} -> struct!(ABI.FunctionSelector, selector_parts)
+      {:selector, selector_parts} -> ABI.FunctionSelector.from_params(selector_parts)
     end
   end
 end

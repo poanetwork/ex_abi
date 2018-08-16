@@ -87,8 +87,8 @@ defmodule ABI do
       iex> File.read!("priv/dog.abi.json")
       ...> |> Poison.decode!
       ...> |> ABI.parse_specification
-      [%ABI.FunctionSelector{function: "bark", returns: nil, types: [:address, :bool]},
-       %ABI.FunctionSelector{function: "rollover", returns: :bool, types: []}]
+      [%ABI.FunctionSelector{function: "bark", returns: [], types: [:address, :bool]},
+       %ABI.FunctionSelector{function: "rollover", returns: [:bool], types: []}]
 
       iex> [%{
       ...>   "constant" => true,
@@ -103,7 +103,7 @@ defmodule ABI do
       ...>   "type" => "function"
       ...> }]
       ...> |> ABI.parse_specification
-      [%ABI.FunctionSelector{function: "bark", returns: nil, types: [:address, :bool]}]
+      [%ABI.FunctionSelector{function: "bark", returns: [], types: [:address, :bool]}]
 
       iex> [%{
       ...>   "inputs" => [
@@ -122,7 +122,7 @@ defmodule ABI do
       ...>   "type" => "fallback"
       ...> }]
       ...> |> ABI.parse_specification
-      [%ABI.FunctionSelector{function: nil, returns: nil, types: []}]
+      [%ABI.FunctionSelector{function: nil, returns: [], types: []}]
   """
   def parse_specification(doc) do
     doc
