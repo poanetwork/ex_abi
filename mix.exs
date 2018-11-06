@@ -5,7 +5,7 @@ defmodule ABI.Mixfile do
     [
       app: :ex_abi,
       version: "0.1.17",
-      elixir: "~> 1.6",
+      elixir: "~> 1.7",
       description: "Ethereum's ABI Interface",
       package: [
         maintainers: ["Ayrat Badykov"],
@@ -28,7 +28,7 @@ defmodule ABI.Mixfile do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, "~> 0.14", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:poison, "~> 3.1", only: [:dev, :test]},
       {:exth_crypto, "~> 0.1.4"}
     ]
