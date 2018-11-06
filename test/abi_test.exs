@@ -14,25 +14,25 @@ defmodule ABITest do
           "inputs" => [
             %{
               "type" => "uint256",
-              "name" => ""
+              "name" => "foo"
             }
           ],
           "name" => "fooBar",
           "outputs" => [
             %{
-              "name" => "",
+              "name" => "foo",
               "type" => "uint256[6]"
             },
             %{
-              "name" => "",
+              "name" => "bar",
               "type" => "bool"
             },
             %{
-              "name" => "",
+              "name" => "baz",
               "type" => "uint256[3]"
             },
             %{
-              "name" => "",
+              "name" => "buz",
               "type" => "string"
             }
           ],
@@ -42,6 +42,45 @@ defmodule ABITest do
         %{
           "name" => "baz",
           "type" => "function",
+          "outputs" => [
+            %{
+              "name" => "",
+              "type" => "tuple",
+              "components" => [
+                %{
+                  "name" => "foo",
+                  "type" => "uint256"
+                },
+                %{
+                  "name" => "bar",
+                  "type" => "uint256"
+                }
+              ]
+            },
+            %{
+              "name" => "",
+              "type" => "string"
+            }
+          ],
+          "inputs" => []
+        },
+        %{
+          "name" => "sam",
+          "type" => "function",
+          "inputs" => [
+            %{
+              "type" => "bytes",
+              "name" => "foo"
+            },
+            %{
+              "type" => "bool",
+              "name" => "bar"
+            },
+            %{
+              "type" => "uint256[]",
+              "name" => "baz"
+            }
+          ],
           "outputs" => [
             %{
               "name" => "",
@@ -61,21 +100,30 @@ defmodule ABITest do
               "name" => "",
               "type" => "string"
             }
-          ],
-          "inputs" => []
+          ]
         }
       ]
 
       expected = [
         %FunctionSelector{
           function: "fooBar",
+          input_names: ["foo"],
           types: [{:uint, 256}],
-          returns: [{:array, {:uint, 256}, 6}, :bool, {:array, {:uint, 256}, 3}, :string]
+          returns: [{:array, {:uint, 256}, 6}, :bool, {:array, {:uint, 256}, 3}, :string],
+          method_id: <<245, 72, 246, 70>>
         },
         %FunctionSelector{
           function: "baz",
           types: [],
-          returns: [{:tuple, [{:uint, 256}, {:uint, 256}]}, :string]
+          returns: [{:tuple, [{:uint, 256}, {:uint, 256}]}, :string],
+          method_id: <<167, 145, 111, 172>>
+        },
+        %FunctionSelector{
+          function: "sam",
+          input_names: ["foo", "bar", "baz"],
+          types: [:bytes, :bool, {:array, {:uint, 256}}],
+          returns: [{:tuple, [{:uint, 256}, {:uint, 256}]}, :string],
+          method_id: <<165, 100, 59, 242>>
         }
       ]
 

@@ -25,11 +25,13 @@ defmodule ABI.FunctionSelector do
   """
   @type t :: %__MODULE__{
           function: String.t(),
+          method_id: String.t() | nil,
+          input_names: [String.t()],
           types: [type],
           returns: [type]
         }
 
-  defstruct [:function, types: [], returns: []]
+  defstruct [:function, :method_id, input_names: [], types: [], returns: []]
 
   @doc """
   Decodes a function selector to a struct.
@@ -136,18 +138,24 @@ defmodule ABI.FunctionSelector do
     } = item
 
     input_types = Enum.map(named_inputs, &parse_specification_type/1)
+    input_names = Enum.map(named_inputs, &Map.get(&1, "name"))
     output_types = Enum.map(named_outputs, &parse_specification_type/1)
 
-    %ABI.FunctionSelector{
+    selector = %ABI.FunctionSelector{
       function: function_name,
       types: input_types,
-      returns: output_types
+      returns: output_types,
+      input_names: input_names
     }
+
+    add_method_id(selector)
   end
 
   def parse_specification_item(%{"type" => "fallback"}) do
     %ABI.FunctionSelector{
       function: nil,
+      method_id: nil,
+      input_names: [],
       types: [],
       returns: []
     }
@@ -182,6 +190,25 @@ defmodule ABI.FunctionSelector do
   end
 
   @doc """
+  Encodes the given single type as a type-string.
+
+  ## Examples
+
+      iex> ABI.FunctionSelector.encode_type({:uint, 256})
+      "uint256"
+
+      iex> ABI.FunctionSelector.encode_type({:tuple, [:bool, :address]})
+      "(bool,address)"
+
+      iex> ABI.FunctionSelector.encode_type({:array, {:array, :address}, 3})
+      "address[][3]"
+
+  """
+  def encode_type(single_type) do
+    get_type(single_type)
+  end
+
+  @doc """
   Encodes a function call signature.
 
   ## Examples
@@ -202,6 +229,18 @@ defmodule ABI.FunctionSelector do
     types = get_types(function_selector) |> Enum.join(",")
 
     "#{function_selector.function}(#{types})"
+  end
+
+  defp add_method_id(selector) do
+    signature = encode(selector)
+
+    case :keccakf1600.hash(:sha3_256, signature) do
+      <<method_id::binary-size(4), _::binary>> ->
+        %{selector | method_id: method_id}
+
+      _ ->
+        selector
+    end
   end
 
   defp get_types(function_selector) do
@@ -255,5 +294,6 @@ defmodule ABI.FunctionSelector do
   defp sanitize_param({key, nil}) when key in ~w(types returns)a do
     {key, []}
   end
+
   defp sanitize_param(tuple), do: tuple
 end

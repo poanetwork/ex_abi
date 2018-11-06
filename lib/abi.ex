@@ -76,6 +76,34 @@ defmodule ABI do
   end
 
   @doc """
+  Finds and decodes the correct function from a list of `ABI.FunctionSelector`s
+
+  The function is found based on the `method_id`, which is generated from the
+  keccak hash of the function head. More information can be found here:
+
+  https://solidity.readthedocs.io/en/develop/abi-spec.html
+
+  Keep in mind, you must include the method identifier in the passed in data
+  otherwise this won't work as expected. If you are decoding transaction input data
+  the identifier is the first four bytes and should already be there.
+
+  ## Examples
+
+      iex> File.read!("priv/dog.abi.json")
+      ...> |> Poison.decode!
+      ...> |> ABI.parse_specification
+      ...> |> ABI.find_and_decode("b85d0bd200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001" |> Base.decode16!(case: :lower))
+      {%ABI.FunctionSelector{function: "bark", input_names: ["at", "loudly"], method_id: <<184, 93, 11, 210>>, returns: [], types: [:address, :bool]}, [<<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1>>, true]}
+  """
+  def find_and_decode(function_selectors, data) do
+    with {:ok, method_id, rest} <- split_method_id(data),
+         {:ok, selector} when not is_nil(selector) <-
+           find_selector_by_method_id(function_selectors, method_id) do
+      {selector, decode(selector, rest)}
+    end
+  end
+
+  @doc """
   Parses the given ABI specification document into an array of `ABI.FunctionSelector`s.
 
   Non-function entries (e.g. constructors) in the ABI specification are skipped. Fallback function entries are accepted.
@@ -87,8 +115,8 @@ defmodule ABI do
       iex> File.read!("priv/dog.abi.json")
       ...> |> Poison.decode!
       ...> |> ABI.parse_specification
-      [%ABI.FunctionSelector{function: "bark", returns: [], types: [:address, :bool]},
-       %ABI.FunctionSelector{function: "rollover", returns: [:bool], types: []}]
+      [%ABI.FunctionSelector{function: "bark", input_names: ["at", "loudly"], method_id: <<184, 93, 11, 210>>, returns: [], types: [:address, :bool]},
+       %ABI.FunctionSelector{function: "rollover", method_id: <<176, 86, 180, 154>>, returns: [:bool], types: []}]
 
       iex> [%{
       ...>   "constant" => true,
@@ -103,7 +131,7 @@ defmodule ABI do
       ...>   "type" => "function"
       ...> }]
       ...> |> ABI.parse_specification
-      [%ABI.FunctionSelector{function: "bark", returns: [], types: [:address, :bool]}]
+      [%ABI.FunctionSelector{function: "bark", method_id: <<184, 93, 11, 210>>, input_names: ["at", "loudly"], returns: [], types: [:address, :bool]}]
 
       iex> [%{
       ...>   "inputs" => [
@@ -122,11 +150,32 @@ defmodule ABI do
       ...>   "type" => "fallback"
       ...> }]
       ...> |> ABI.parse_specification
-      [%ABI.FunctionSelector{function: nil, returns: [], types: []}]
+      [%ABI.FunctionSelector{function: nil, returns: [], types: [], method_id: nil}]
   """
   def parse_specification(doc) do
     doc
     |> Enum.map(&ABI.FunctionSelector.parse_specification_item/1)
-    |> Enum.filter(& &1)
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp find_selector_by_method_id(function_selectors, method_id_target) do
+    function_selector =
+      Enum.find(function_selectors, fn %{method_id: method_id} ->
+        method_id == method_id_target
+      end)
+
+    if function_selector do
+      {:ok, function_selector}
+    else
+      {:error, :no_matching_function}
+    end
+  end
+
+  defp split_method_id(<<method_id::binary-size(4), rest::binary>>) do
+    {:ok, method_id, rest}
+  end
+
+  defp split_method_id(_) do
+    {:error, :invalid_data}
   end
 end

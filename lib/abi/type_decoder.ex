@@ -362,10 +362,4 @@ defmodule ABI.TypeDecoder do
         {value, rest}
     end
   end
-
-  defp nul_terminate_string(raw_string) do
-    raw_string = :erlang.iolist_to_binary(raw_string)
-    [pre_nul_part | _] = :binary.split(raw_string, <<0>>)
-    pre_nul_part
-  end
 end
