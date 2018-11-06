@@ -10,6 +10,7 @@ defmodule ABI.TypeDecoderTest do
       positive_int = "000000000000000000000000000000000000000000000000000000000000002a"
       negative_int = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd8f1"
       result_to_decode = Base.decode16!(positive_int <> negative_int, case: :lower)
+
       selector = %ABI.FunctionSelector{
         function: "baz",
         types: [
@@ -69,8 +70,7 @@ defmodule ABI.TypeDecoderTest do
         """
         |> encode_multiline_string()
 
-      assert TypeDecoder.decode_raw(data, [{:array, {:uint, 256}, 6}]) ==
-        [[7, 3, 0, 0, 0, 5]]
+      assert TypeDecoder.decode_raw(data, [{:array, {:uint, 256}, 6}]) == [[7, 3, 0, 0, 0, 5]]
     end
 
     test "with a fixed-length array of dynamic data" do
@@ -107,8 +107,12 @@ defmodule ABI.TypeDecoderTest do
         """
         |> encode_multiline_string()
 
-      assert TypeDecoder.decode_raw(data, [{:uint, 256}, {:array, {:uint, 32}}, {:bytes, 10}, :bytes]) ==
-        [0x123, [0x456, 0x789], "1234567890", "Hello, world!"]
+      assert TypeDecoder.decode_raw(data, [
+               {:uint, 256},
+               {:array, {:uint, 32}},
+               {:bytes, 10},
+               :bytes
+             ]) == [0x123, [0x456, 0x789], "1234567890", "Hello, world!"]
     end
 
     test "with static tuple" do
@@ -119,25 +123,27 @@ defmodule ABI.TypeDecoderTest do
         """
         |> encode_multiline_string()
 
-      assert TypeDecoder.decode_raw(data, [{:tuple, [{:uint, 256}, {:bytes, 10}]}]) == [{0x123, "1234567890"}]
+      assert TypeDecoder.decode_raw(data, [{:tuple, [{:uint, 256}, {:bytes, 10}]}]) == [
+               {0x123, "1234567890"}
+             ]
     end
 
     test "with dynamic tuple" do
       data =
-         """
-         0000000000000000000000000000000000000000000000000000000000000020
-         0000000000000000000000000000000000000000000000000000000000000080
-         0000000000000000000000000000000000000000000000000000000000000123
-         00000000000000000000000000000000000000000000000000000000000000c0
-         0000000000000000000000000000000000000000000000000000000000000004
-         6461766500000000000000000000000000000000000000000000000000000000
-         000000000000000000000000000000000000000000000000000000000000000d
-         48656c6c6f2c20776f726c642100000000000000000000000000000000000000
-         """
-         |> encode_multiline_string()
+        """
+        0000000000000000000000000000000000000000000000000000000000000020
+        0000000000000000000000000000000000000000000000000000000000000080
+        0000000000000000000000000000000000000000000000000000000000000123
+        00000000000000000000000000000000000000000000000000000000000000c0
+        0000000000000000000000000000000000000000000000000000000000000004
+        6461766500000000000000000000000000000000000000000000000000000000
+        000000000000000000000000000000000000000000000000000000000000000d
+        48656c6c6f2c20776f726c642100000000000000000000000000000000000000
+        """
+        |> encode_multiline_string()
 
       assert TypeDecoder.decode_raw(data, [{:tuple, [:bytes, {:uint, 256}, :string]}]) ==
-        [{"dave", 0x123, "Hello, world!"}]
+               [{"dave", 0x123, "Hello, world!"}]
     end
 
     test "with the output of an executed contract" do
@@ -212,11 +218,11 @@ defmodule ABI.TypeDecoderTest do
         [7, 3, 0, 0, 0, 5],
         true,
         [
-          0x12413b856370914a000,
-          0x12413b856370914a000,
-          0x53444835ec580000,
+          0x12413B856370914A000,
+          0x12413B856370914A000,
+          0x53444835EC580000,
           0,
-          0x3e73362871420000,
+          0x3E73362871420000,
           0,
           0,
           0,
@@ -263,14 +269,24 @@ defmodule ABI.TypeDecoderTest do
           false,
           false
         ],
-        0x1212f67eff9a8ac801a,
-        0x1212f67eff9a8ac8010,
+        0x1212F67EFF9A8AC801A,
+        0x1212F67EFF9A8AC8010,
         1,
         1,
         "Cartagena"
       ]
 
-      assert TypeDecoder.decode_raw(data, [{:array, {:uint, 256}, 6}, :bool, {:array, {:uint, 256}, 24}, {:array, :bool, 24}, {:uint, 256}, {:uint, 256}, {:uint, 256}, {:uint, 256}, :string]) == expected
+      assert TypeDecoder.decode_raw(data, [
+               {:array, {:uint, 256}, 6},
+               :bool,
+               {:array, {:uint, 256}, 24},
+               {:array, :bool, 24},
+               {:uint, 256},
+               {:uint, 256},
+               {:uint, 256},
+               {:uint, 256},
+               :string
+             ]) == expected
     end
   end
 

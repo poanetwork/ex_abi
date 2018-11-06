@@ -52,15 +52,15 @@ defmodule ABI.FunctionSelectorTest do
       expected = {
         :tuple,
         [
-         {:array, {:uint, 256}, 6},
-         :bool,
-         {:array, {:uint, 256}, 24},
-         {:array, :bool, 24},
-         {:uint, 256},
-         {:uint, 256},
-         {:uint, 256},
-         {:uint, 256},
-         :string
+          {:array, {:uint, 256}, 6},
+          :bool,
+          {:array, {:uint, 256}, 24},
+          {:array, :bool, 24},
+          {:uint, 256},
+          {:uint, 256},
+          {:uint, 256},
+          {:uint, 256},
+          :string
         ]
       }
 

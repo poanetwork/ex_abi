@@ -255,5 +255,6 @@ defmodule ABI.FunctionSelector do
   defp sanitize_param({key, nil}) when key in ~w(types returns)a do
     {key, []}
   end
+
   defp sanitize_param(tuple), do: tuple
 end
