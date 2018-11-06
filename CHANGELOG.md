@@ -1,3 +1,8 @@
+# 0.1.17
+* Attach the method id to the struct as `method_id` (https://github.com/poanetwork/ex_abi/pull/9)
+* Add the argument names to the struct as `input_names` (https://github.com/poanetwork/ex_abi/pull/9)
+* Add `encode_type/1` to give a public API for encoding single types (used for display in blockscout) (https://github.com/poanetwork/ex_abi/pull/9)
+* Add `find_and_decode/2` which finds the correct function selector from the list by method_id and decodes the provided call (https://github.com/poanetwork/ex_abi/pull/9)
 # 0.1.16
 * Allow functions to have mutliple output types (https://github.com/poanetwork/ex_abi/pull/8)
 # 0.1.15
