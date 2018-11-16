@@ -95,8 +95,10 @@ defmodule ABI.Event do
       if ABI.FunctionSelector.is_dynamic?(type) do
         {bytes, _} = ABI.TypeDecoder.decode_bytes(topic, 32, :left)
 
-        # TODO: Make sure this is documented! The caller will need to know this
-        # but they probably won't want it to actually look this way.
+        # This is explained in the docstring. The caller will almost certainly
+        # need to know that they don't have an actual encoded value of that type
+        # but rather they have a 32 bit hash of the value.
+
         {:dynamic, bytes}
       else
         topic
