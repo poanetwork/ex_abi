@@ -30,8 +30,7 @@ defmodule ABI.TypeDecoder do
       [69, true]
 
       iex> "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd6"
-      ...> |> Base.decode16!(case: :lower)
-      ...> |> ABI.TypeDecoder.decode(
+      ...> |> Base.decode16!(case: :lower) ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
       ...>        function: "baz",
       ...>        types: [

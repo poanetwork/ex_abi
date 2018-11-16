@@ -106,6 +106,7 @@ defmodule ABITest do
 
       expected = [
         %FunctionSelector{
+          type: :function,
           function: "fooBar",
           input_names: ["foo"],
           types: [{:uint, 256}],
@@ -113,12 +114,14 @@ defmodule ABITest do
           method_id: <<245, 72, 246, 70>>
         },
         %FunctionSelector{
+          type: :function,
           function: "baz",
           types: [],
           returns: [{:tuple, [{:uint, 256}, {:uint, 256}]}, :string],
           method_id: <<167, 145, 111, 172>>
         },
         %FunctionSelector{
+          type: :function,
           function: "sam",
           input_names: ["foo", "bar", "baz"],
           types: [:bytes, :bool, {:array, {:uint, 256}}],

@@ -22,16 +22,30 @@ defmodule ABI.FunctionSelector do
   * `:function` - Name of the function
   * `:types` - Function's input types
   * `:returns` - Function's return types
+  * `:method_id` - First four bits of the hashed function signature
+  * `:input_names` - Names of the input values (argument names)
+  * `:type` - The type of the selector. Events are part of the ABI, but are not considered functions
+  * `:inputs_index` - A list of true/false values denoting if each input is indexed. Only populated for events.
   """
   @type t :: %__MODULE__{
           function: String.t(),
           method_id: String.t() | nil,
           input_names: [String.t()],
           types: [type],
-          returns: [type]
+          returns: [type],
+          type: :event | :function,
+          inputs_indexed: [boolean]
         }
 
-  defstruct [:function, :method_id, input_names: [], types: [], returns: []]
+  defstruct [
+    :function,
+    :method_id,
+    :type,
+    :inputs_indexed,
+    input_names: [],
+    types: [],
+    returns: []
+  ]
 
   @doc """
   Decodes a function selector to a struct.
@@ -145,7 +159,29 @@ defmodule ABI.FunctionSelector do
       function: function_name,
       types: input_types,
       returns: output_types,
-      input_names: input_names
+      input_names: input_names,
+      type: :function
+    }
+
+    add_method_id(selector)
+  end
+
+  def parse_specification_item(%{"type" => "event"} = item) do
+    %{
+      "name" => event_name,
+      "inputs" => named_inputs
+    } = item
+
+    input_types = Enum.map(named_inputs, &parse_specification_type/1)
+    input_names = Enum.map(named_inputs, &Map.get(&1, "name"))
+    inputs_indexed = Enum.map(named_inputs, &Map.get(&1, "indexed"))
+
+    selector = %ABI.FunctionSelector{
+      function: event_name,
+      types: input_types,
+      input_names: input_names,
+      inputs_indexed: inputs_indexed,
+      type: :event
     }
 
     add_method_id(selector)
@@ -157,7 +193,8 @@ defmodule ABI.FunctionSelector do
       method_id: nil,
       input_names: [],
       types: [],
-      returns: []
+      returns: [],
+      type: :function
     }
   end
 
