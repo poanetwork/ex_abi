@@ -157,7 +157,7 @@ defmodule ABI.TypeDecoder do
 
   defp decode_raw(binary_data, types, initial_cursor_offset) do
     {reversed_result, _} =
-      Enum.reduce(types, {[], initial_cursor_offset}, fn (type, {acc, cursor_offset}) ->
+      Enum.reduce(types, {[], initial_cursor_offset}, fn type, {acc, cursor_offset} ->
         do_decode_raw(binary_data, type, cursor_offset, acc)
       end)
 
@@ -168,9 +168,9 @@ defmodule ABI.TypeDecoder do
     {allocation, current_head_bit_length} = type_metadata(type)
 
     <<
-      _prev :: bits-size(cursor_offset),
-      current_head_data :: bits-size(current_head_bit_length),
-      _rest :: binary
+      _prev::bits-size(cursor_offset),
+      current_head_data::bits-size(current_head_bit_length),
+      _rest::binary
     >> = binary_data
 
     decoded_data = decode_data(binary_data, type, allocation, current_head_data)
@@ -184,7 +184,7 @@ defmodule ABI.TypeDecoder do
   defp decode_data(binary_data, type, allocation, head_data)
 
   defp decode_data(binary_data, {:tuple, sub_types}, :dynamic, head_data) do
-    <<data_offset_byte_length :: integer-size(256) >> = head_data
+    <<data_offset_byte_length::integer-size(256)>> = head_data
     data_offset_bit_length = data_offset_byte_length * 8
 
     binary_data
@@ -199,17 +199,17 @@ defmodule ABI.TypeDecoder do
   end
 
   defp decode_data(binary_data, {:array, type}, :dynamic, head_data) do
-    <<data_offset_byte_length :: integer-size(256) >> = head_data
+    <<data_offset_byte_length::integer-size(256)>> = head_data
 
     <<
-      _prev :: bytes-size(data_offset_byte_length),
-      array_length_count :: integer-size(256),
-      _rest :: binary
+      _prev::bytes-size(data_offset_byte_length),
+      array_length_count::integer-size(256),
+      _rest::binary
     >> = binary_data
 
     if array_length_count > 0 do
       types = for _ <- 1..array_length_count, do: type
-      array_data_offset =  (data_offset_byte_length * 8) + 256
+      array_data_offset = data_offset_byte_length * 8 + 256
 
       decode_raw(binary_data, types, array_data_offset)
     else
@@ -220,7 +220,7 @@ defmodule ABI.TypeDecoder do
   defp decode_data(binary_data, {:array, type, count}, :dynamic, head_data) do
     repeated_type = for _ <- 1..count, do: type
 
-    <<data_offset_byte_length :: integer-size(256) >> = head_data
+    <<data_offset_byte_length::integer-size(256)>> = head_data
     data_offset_bit_length = data_offset_byte_length * 8
 
     decode_raw(binary_data, repeated_type, data_offset_bit_length)
@@ -232,11 +232,11 @@ defmodule ABI.TypeDecoder do
   end
 
   defp decode_data(binary_data, type, :dynamic, head_data) do
-    <<data_offset_byte_length :: integer-size(256) >> = head_data
+    <<data_offset_byte_length::integer-size(256)>> = head_data
 
     <<
-      _prev :: bytes-size(data_offset_byte_length),
-      type_data :: binary
+      _prev::bytes-size(data_offset_byte_length),
+      type_data::binary
     >> = binary_data
 
     {decoded_data, _} = decode_type(type, type_data)
@@ -257,6 +257,7 @@ defmodule ABI.TypeDecoder do
       {:static, 256 * length(sub_types)}
     end
   end
+
   defp type_metadata({:array, type, count}) do
     if FunctionSelector.is_dynamic?(type) do
       {:dynamic, 256}
@@ -264,6 +265,7 @@ defmodule ABI.TypeDecoder do
       {:static, 256 * count}
     end
   end
+
   defp type_metadata(type) do
     type_head_bit_length = 256
 
@@ -299,13 +301,13 @@ defmodule ABI.TypeDecoder do
 
   defp decode_type(:string, data) do
     <<
-      string_length_in_bytes :: integer-size(256),
-      string_data :: binary
+      string_length_in_bytes::integer-size(256),
+      string_data::binary
     >> = data
 
     <<
-      string :: bytes-size(string_length_in_bytes),
-      rest :: binary
+      string::bytes-size(string_length_in_bytes),
+      rest::binary
     >> = string_data
 
     {string, rest}

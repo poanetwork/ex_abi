@@ -264,9 +264,7 @@ defmodule ABI.TypeEncoder do
 
   defp encode_int(data, size_in_bits) when rem(size_in_bits, 8) == 0 do
     if signed_overflow?(data, size_in_bits) do
-      raise(
-        "Data overflow encoding int, data `#{data}` cannot fit in #{size_in_bits} bits"
-      )
+      raise("Data overflow encoding int, data `#{data}` cannot fit in #{size_in_bits} bits")
     end
 
     encode_int(data)
@@ -276,7 +274,7 @@ defmodule ABI.TypeEncoder do
   defp encode_int(data), do: <<data::signed-256>>
 
   defp signed_overflow?(n, max_bits) do
-    n < (:math.pow(2, max_bits-1) * -1) + 1 || n > (:math.pow(2, max_bits-1)) - 1
+    n < :math.pow(2, max_bits - 1) * -1 + 1 || n > :math.pow(2, max_bits - 1) - 1
   end
 
   defp pad(bin, size_in_bytes, direction) do
