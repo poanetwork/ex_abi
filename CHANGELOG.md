@@ -1,3 +1,5 @@
+# 0.1.18
+* Add event parsing (https://github.com/poanetwork/ex_abi/pull/11)
 # 0.1.17
 * Attach the method id to the struct as `method_id` (https://github.com/poanetwork/ex_abi/pull/9)
 * Add the argument names to the struct as `input_names` (https://github.com/poanetwork/ex_abi/pull/9)
