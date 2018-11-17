@@ -31,5 +31,28 @@
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
-  }
+  },
+
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"name": "_from_human",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"name": "_number",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"name": "_belly",
+				"type": "bool"
+			}
+		],
+		"name": "WantsPets",
+		"type": "event"
+	}
 ]
