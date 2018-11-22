@@ -81,7 +81,7 @@ defmodule ABI.Event do
 
       unindexed_arg_types = Enum.map(unindexed_args, &elem(&1, 1))
 
-      unindexed_arg_values = ABI.TypeDecoder.decode_raw(data, unindexed_arg_types)
+      unindexed_arg_values = ABI.TypeDecoder.decode(data, unindexed_arg_types)
 
       {selector, format_event_values(args, indexed_arg_values, unindexed_arg_values)}
     end
@@ -102,7 +102,7 @@ defmodule ABI.Event do
         {:dynamic, bytes}
       else
         topic
-        |> ABI.TypeDecoder.decode_raw([type])
+        |> ABI.TypeDecoder.decode([type])
         |> List.first()
       end
 
