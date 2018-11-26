@@ -29,17 +29,17 @@ defmodule ABI.TypeDecoderTest do
     test "with string data" do
       types = [:string]
       result = ["dave"]
-      assert result == TypeEncoder.encode(result,types) |> TypeDecoder.decode(types)
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
     end
 
     test "with dynamic array data" do
       types = [{:array, :address}]
       result = [[]]
-      assert result == TypeEncoder.encode(result,types) |> TypeDecoder.decode(types)
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
 
       types = [{:array, :address}]
       result = [[<<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 35>>]]
-      assert result == TypeEncoder.encode(result,types) |> TypeDecoder.decode(types)
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
     end
 
     test "with a fixed-length array of static data" do
@@ -60,18 +60,19 @@ defmodule ABI.TypeDecoderTest do
     test "with a fixed-length array of dynamic data" do
       types = [{:array, :string, 3}]
       result = [["foo", "bar", "baz"]]
-      assert result == TypeEncoder.encode(result,types) |> TypeDecoder.decode(types)
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
     end
 
     test "with multiple types" do
       types = [
-               {:uint, 256},
-               {:array, {:uint, 32}},
-               {:bytes, 10},
-               :bytes
-             ]
+        {:uint, 256},
+        {:array, {:uint, 32}},
+        {:bytes, 10},
+        :bytes
+      ]
+
       result = [0x123, [0x456, 0x789], "1234567890", "Hello, world!"]
-      assert result == TypeEncoder.encode(result,types) |> TypeDecoder.decode(types)
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
     end
 
     test "with static tuple" do
@@ -90,9 +91,8 @@ defmodule ABI.TypeDecoderTest do
     test "with dynamic tuple" do
       types = [{:tuple, [:bytes, {:uint, 256}, :string]}]
       result = [{"dave", 0x123, "Hello, world!"}]
-      assert result == TypeEncoder.encode(result,types) |> TypeDecoder.decode(types)
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
     end
-
 
     test "with the output of an executed contract" do
       data =

@@ -150,7 +150,7 @@ defmodule ABI.TypeDecoder do
 
   def decode(encoded_data, types) do
     {result, <<>>} = decode_raw(encoded_data, types)
-    result 
+    result
   end
 
   @doc """
@@ -183,7 +183,7 @@ defmodule ABI.TypeDecoder do
     decode_type({:array, type, count}, bytes)
   end
 
-  defp decode_type({:array, type, size}, data) do 
+  defp decode_type({:array, type, size}, data) do
     types = List.duplicate(type, size)
     {tuple, bytes} = decode_type({:tuple, types}, data)
     {Tuple.to_list(tuple), bytes}

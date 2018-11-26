@@ -112,12 +112,12 @@ defmodule ABI.TypeEncoder do
       "000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
   """
 
-  def encode(data, %ABI.FunctionSelector{ function: nil, types: types}) do
+  def encode(data, %ABI.FunctionSelector{function: nil, types: types}) do
     encode_raw(data, types)
   end
 
   def encode(data, %ABI.FunctionSelector{types: types} = function_selector) do
-    {result, []} = encode_type({:tuple, types}, [List.to_tuple(data)]) 
+    {result, []} = encode_type({:tuple, types}, [List.to_tuple(data)])
     encode_method_id(function_selector) <> result
   end
 
@@ -288,8 +288,9 @@ defmodule ABI.TypeEncoder do
 
   # TODO change to ExthCrypto.Math.mod when it's fixed ( mod(-75,32) == 21 )
   def mod(x, n) do
-    remainder = rem x, n
-    if remainder < 0, 
+    remainder = rem(x, n)
+
+    if remainder < 0,
       do: n + remainder,
       else: remainder
   end
