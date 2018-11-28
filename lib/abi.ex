@@ -93,7 +93,7 @@ defmodule ABI do
   otherwise this won't work as expected. If you are decoding transaction input data
   the identifier is the first four bytes and should already be there.
 
-    To find and decode events instead of functions, see `find_and_decode_event/6`
+  To find and decode events instead of functions, see `find_and_decode_event/6`
 
   ## Examples
 

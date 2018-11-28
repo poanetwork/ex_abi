@@ -290,7 +290,7 @@ defmodule ABI.TypeEncoder do
   def mod(x, n) do
     remainder = rem(x, n)
 
-    if remainder < 0,
+    if (remainder < 0 and n > 0) or (remainder > 0 and n < 0),
       do: n + remainder,
       else: remainder
   end

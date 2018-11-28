@@ -140,7 +140,7 @@ defmodule ABI.TypeDecoder do
   def decode(encoded_data, %FunctionSelector{types: types, method_id: method_id})
       when is_binary(method_id) do
     {:ok, ^method_id, rest} = ABI.Util.split_method_id(encoded_data)
-    {[result], <<>>} = decode_raw(rest, [{:tuple, types}])
+    [result] = decode_raw(rest, [{:tuple, types}])
     Tuple.to_list(result)
   end
 
@@ -149,8 +149,7 @@ defmodule ABI.TypeDecoder do
   end
 
   def decode(encoded_data, types) do
-    {result, <<>>} = decode_raw(encoded_data, types)
-    result
+    decode_raw(encoded_data, types)
   end
 
   @doc """
@@ -161,9 +160,14 @@ defmodule ABI.TypeDecoder do
 
       iex> ABI.TypeEncoder.encode([{"awesome", true}], [{:tuple, [:string, :bool]}]) 
       ...> |> ABI.TypeDecoder.decode_raw([{:tuple, [:string, :bool]}])
-      {[{"awesome", true}], <<>>}
+      [{"awesome", true}]
   """
   def decode_raw(binary_data, types) do
+    {result, _} = do_decode_raw(binary_data, types)
+    result
+  end
+
+  def do_decode_raw(binary_data, types) do
     {reversed_result, binary_rest} =
       Enum.reduce(types, {[], binary_data}, fn type, {acc, binary} ->
         {value, rest} = decode_type(type, binary)
@@ -201,7 +205,9 @@ defmodule ABI.TypeDecoder do
         end
       end)
 
-    {reversed_result_dynamic, binary} = decode_raw(binary, Enum.reverse(reversed_dynamic_types))
+    {reversed_result_dynamic, binary} =
+      do_decode_raw(binary, Enum.reverse(reversed_dynamic_types))
+
     result_dynamic = Enum.reverse(reversed_result_dynamic)
 
     {result, _} =
@@ -261,7 +267,7 @@ defmodule ABI.TypeDecoder do
   def mod(x, n) do
     remainder = rem(x, n)
 
-    if remainder < 0,
+    if (remainder < 0 and n > 0) or (remainder > 0 and n < 0),
       do: n + remainder,
       else: remainder
   end

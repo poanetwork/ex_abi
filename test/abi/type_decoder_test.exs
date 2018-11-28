@@ -25,7 +25,7 @@ defmodule ABI.TypeDecoderTest do
     end
   end
 
-  describe "decode raw" do
+  describe "decode" do
     test "with string data" do
       types = [:string]
       result = ["dave"]
