@@ -18,6 +18,10 @@ defmodule ABI do
       ...> |> Base.encode16(case: :lower)
       "a291add600000000000000000000000000000000000000000000000000000000000000320000000000000000000000000000000000000000000000000000000000000001"
 
+      iex> ABI.encode("(address[])", [{[]}] ) |> Base.encode16(case: :lower)
+      "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000"
+
+
       iex> ABI.encode("baz(uint8)", [9999])
       ** (RuntimeError) Data overflow encoding uint, data `9999` cannot fit in 8 bits
 
@@ -56,17 +60,17 @@ defmodule ABI do
       iex> ABI.decode("baz(uint,address)", "00000000000000000000000000000000000000000000000000000000000000320000000000000000000000000000000000000000000000000000000000000001" |> Base.decode16!(case: :lower))
       [50, <<1::160>>]
 
-      iex> ABI.decode("(address[])", "000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000" |> Base.decode16!(case: :lower))
+      iex> ABI.decode("(address[])", "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000" |> Base.decode16!(case: :lower))
       [{[]}]
 
-      iex> ABI.decode("(string)", "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000b457468657220546f6b656e000000000000000000000000000000000000000000" |> Base.decode16!(case: :lower))
+      iex> ABI.decode("(string)", "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b457468657220546f6b656e000000000000000000000000000000000000000000" |> Base.decode16!(case: :lower))
       [{"Ether Token"}]
 
       iex> File.read!("priv/dog.abi.json")
       ...> |> Poison.decode!
       ...> |> ABI.parse_specification
       ...> |> Enum.find(&(&1.function == "bark")) # bark(address,bool)
-      ...> |> ABI.decode("00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001" |> Base.decode16!(case: :lower))
+      ...> |> ABI.decode("b85d0bd200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001" |> Base.decode16!(case: :lower))
       [<<1::160>>, true]
   """
   def decode(function_signature, data) when is_binary(function_signature) do
@@ -100,10 +104,10 @@ defmodule ABI do
       {%ABI.FunctionSelector{type: :function, function: "bark", input_names: ["at", "loudly"], method_id: <<184, 93, 11, 210>>, returns: [], types: [:address, :bool]}, [<<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1>>, true]}
   """
   def find_and_decode(function_selectors, data) do
-    with {:ok, method_id, rest} <- Util.split_method_id(data),
+    with {:ok, method_id, _rest} <- Util.split_method_id(data),
          {:ok, selector} when not is_nil(selector) <-
            Util.find_selector_by_method_id(function_selectors, method_id) do
-      {selector, decode(selector, rest)}
+      {selector, decode(selector, data)}
     end
   end
 

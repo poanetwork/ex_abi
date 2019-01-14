@@ -4,6 +4,7 @@ defmodule ABI.TypeDecoderTest do
   doctest ABI.TypeDecoder
 
   alias ABI.TypeDecoder
+  alias ABI.TypeEncoder
 
   describe "decode/2 '{:int, size}' type" do
     test "successfully decodes positives and negatives integers" do
@@ -24,38 +25,21 @@ defmodule ABI.TypeDecoderTest do
     end
   end
 
-  describe "decode_raw" do
+  describe "decode" do
     test "with string data" do
-      data =
-        """
-        0000000000000000000000000000000000000000000000000000000000000020
-        0000000000000000000000000000000000000000000000000000000000000004
-        6461766500000000000000000000000000000000000000000000000000000000
-        """
-        |> encode_multiline_string()
-
-      assert TypeDecoder.decode_raw(data, [:string]) == ["dave"]
+      types = [:string]
+      result = ["dave"]
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
     end
 
     test "with dynamic array data" do
-      data =
-        """
-        0000000000000000000000000000000000000000000000000000000000000020
-        0000000000000000000000000000000000000000000000000000000000000000
-        """
-        |> encode_multiline_string()
+      types = [{:array, :address}]
+      result = [[]]
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
 
-      assert TypeDecoder.decode_raw(data, [{:array, :address}]) == [[]]
-
-      data =
-        """
-        0000000000000000000000000000000000000000000000000000000000000020
-        0000000000000000000000000000000000000000000000000000000000000001
-        0000000000000000000000000000000000000000000000000000000000000123
-        """
-        |> encode_multiline_string()
-
-      assert TypeDecoder.decode_raw(data, [{:array, {:uint, 256}}]) == [[0x123]]
+      types = [{:array, :address}]
+      result = [[<<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 35>>]]
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
     end
 
     test "with a fixed-length array of static data" do
@@ -70,49 +54,25 @@ defmodule ABI.TypeDecoderTest do
         """
         |> encode_multiline_string()
 
-      assert TypeDecoder.decode_raw(data, [{:array, {:uint, 256}, 6}]) == [[7, 3, 0, 0, 0, 5]]
+      assert TypeDecoder.decode(data, [{:array, {:uint, 256}, 6}]) == [[7, 3, 0, 0, 0, 5]]
     end
 
     test "with a fixed-length array of dynamic data" do
-      data =
-        """
-        0000000000000000000000000000000000000000000000000000000000000020
-        0000000000000000000000000000000000000000000000000000000000000080
-        00000000000000000000000000000000000000000000000000000000000000c0
-        0000000000000000000000000000000000000000000000000000000000000100
-        0000000000000000000000000000000000000000000000000000000000000003
-        666F6F0000000000000000000000000000000000000000000000000000000000
-        0000000000000000000000000000000000000000000000000000000000000003
-        6261720000000000000000000000000000000000000000000000000000000000
-        0000000000000000000000000000000000000000000000000000000000000003
-        62617A0000000000000000000000000000000000000000000000000000000000
-        """
-        |> encode_multiline_string()
-
-      assert TypeDecoder.decode_raw(data, [{:array, :string, 3}]) == [["foo", "bar", "baz"]]
+      types = [{:array, :string, 3}]
+      result = [["foo", "bar", "baz"]]
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
     end
 
     test "with multiple types" do
-      data =
-        """
-        0000000000000000000000000000000000000000000000000000000000000123
-        0000000000000000000000000000000000000000000000000000000000000080
-        3132333435363738393000000000000000000000000000000000000000000000
-        00000000000000000000000000000000000000000000000000000000000000e0
-        0000000000000000000000000000000000000000000000000000000000000002
-        0000000000000000000000000000000000000000000000000000000000000456
-        0000000000000000000000000000000000000000000000000000000000000789
-        000000000000000000000000000000000000000000000000000000000000000d
-        48656c6c6f2c20776f726c642100000000000000000000000000000000000000
-        """
-        |> encode_multiline_string()
+      types = [
+        {:uint, 256},
+        {:array, {:uint, 32}},
+        {:bytes, 10},
+        :bytes
+      ]
 
-      assert TypeDecoder.decode_raw(data, [
-               {:uint, 256},
-               {:array, {:uint, 32}},
-               {:bytes, 10},
-               :bytes
-             ]) == [0x123, [0x456, 0x789], "1234567890", "Hello, world!"]
+      result = [0x123, [0x456, 0x789], "1234567890", "Hello, world!"]
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
     end
 
     test "with static tuple" do
@@ -123,27 +83,15 @@ defmodule ABI.TypeDecoderTest do
         """
         |> encode_multiline_string()
 
-      assert TypeDecoder.decode_raw(data, [{:tuple, [{:uint, 256}, {:bytes, 10}]}]) == [
+      assert TypeDecoder.decode(data, [{:tuple, [{:uint, 256}, {:bytes, 10}]}]) == [
                {0x123, "1234567890"}
              ]
     end
 
     test "with dynamic tuple" do
-      data =
-        """
-        0000000000000000000000000000000000000000000000000000000000000020
-        0000000000000000000000000000000000000000000000000000000000000080
-        0000000000000000000000000000000000000000000000000000000000000123
-        00000000000000000000000000000000000000000000000000000000000000c0
-        0000000000000000000000000000000000000000000000000000000000000004
-        6461766500000000000000000000000000000000000000000000000000000000
-        000000000000000000000000000000000000000000000000000000000000000d
-        48656c6c6f2c20776f726c642100000000000000000000000000000000000000
-        """
-        |> encode_multiline_string()
-
-      assert TypeDecoder.decode_raw(data, [{:tuple, [:bytes, {:uint, 256}, :string]}]) ==
-               [{"dave", 0x123, "Hello, world!"}]
+      types = [{:tuple, [:bytes, {:uint, 256}, :string]}]
+      result = [{"dave", 0x123, "Hello, world!"}]
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
     end
 
     test "with the output of an executed contract" do
@@ -208,7 +156,6 @@ defmodule ABI.TypeDecoderTest do
         0000000000000000000000000000000000000000000001212f67eff9a8ac8010
         0000000000000000000000000000000000000000000000000000000000000001
         0000000000000000000000000000000000000000000000000000000000000001
-        0000000000000000000000000000000000000000000000000000000000000780
         0000000000000000000000000000000000000000000000000000000000000009
         436172746167656e610000000000000000000000000000000000000000000000
         """
@@ -276,7 +223,7 @@ defmodule ABI.TypeDecoderTest do
         "Cartagena"
       ]
 
-      assert TypeDecoder.decode_raw(data, [
+      assert TypeDecoder.decode(data, [
                {:array, {:uint, 256}, 6},
                :bool,
                {:array, {:uint, 256}, 24},

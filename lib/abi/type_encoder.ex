@@ -111,8 +111,18 @@ defmodule ABI.TypeEncoder do
       ...> |> Base.encode16(case: :lower)
       "000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
   """
-  def encode(data, function_selector) do
-    encode_method_id(function_selector) <> encode_raw(data, function_selector.types)
+
+  def encode(data, %ABI.FunctionSelector{function: nil, types: types}) do
+    encode_raw(data, types)
+  end
+
+  def encode(data, %ABI.FunctionSelector{types: types} = function_selector) do
+    {result, []} = encode_type({:tuple, types}, [List.to_tuple(data)])
+    encode_method_id(function_selector) <> result
+  end
+
+  def encode(data, types) do
+    encode_raw(data, types)
   end
 
   @doc """
@@ -225,8 +235,7 @@ defmodule ABI.TypeEncoder do
   end
 
   defp encode_type({:array, type, element_count}, [data | rest]) do
-    repeated_type = Enum.map(1..element_count, fn _ -> type end)
-
+    repeated_type = List.duplicate(type, element_count)
     encode_type({:tuple, repeated_type}, [data |> List.to_tuple() | rest])
   end
 
@@ -277,9 +286,18 @@ defmodule ABI.TypeEncoder do
     n < :math.pow(2, max_bits - 1) * -1 + 1 || n > :math.pow(2, max_bits - 1) - 1
   end
 
+  # TODO change to ExthCrypto.Math.mod when it's fixed ( mod(-75,32) == 21 )
+  def mod(x, n) do
+    remainder = rem(x, n)
+
+    if (remainder < 0 and n > 0) or (remainder > 0 and n < 0),
+      do: n + remainder,
+      else: remainder
+  end
+
   defp pad(bin, size_in_bytes, direction) do
     # TODO: Create `left_pad` repo, err, add to `ExthCrypto.Math`
-    total_size = size_in_bytes + ExthCrypto.Math.mod(32 - size_in_bytes, 32)
+    total_size = size_in_bytes + mod(32 - size_in_bytes, 32)
     padding_size_bits = (total_size - byte_size(bin)) * 8
     padding = <<0::size(padding_size_bits)>>
 
