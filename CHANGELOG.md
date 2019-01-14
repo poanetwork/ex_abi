@@ -1,3 +1,5 @@
+# 0.2.0
+* Fix decoding array types (https://github.com/poanetwork/ex_abi/pull/14)
 # 0.1.18
 * Add event parsing (https://github.com/poanetwork/ex_abi/pull/11)
 # 0.1.17
