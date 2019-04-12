@@ -65,7 +65,7 @@ defmodule ABI.Event do
       }
   """
   @spec find_and_decode([FunctionSelector.t()], topic, topic, topic, topic, binary) ::
-          {FunctionSelector.t(), [event_value]}
+          {FunctionSelector.t(), [event_value]} | {:error, any}
   def find_and_decode(function_selectors, topic1, topic2, topic3, topic4, data) do
     with {:ok, method_id, _rest} <- Util.split_method_id(topic1),
          {:ok, selector} when not is_nil(selector) <-
