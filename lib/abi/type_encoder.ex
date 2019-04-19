@@ -307,7 +307,7 @@ defmodule ABI.TypeEncoder do
     end
   end
 
-  @spec maybe_encode_unsigned(binary() | integer()) :: binary()
+  @spec maybe_encode_unsigned(binary() | non_neg_integer()) :: binary()
   defp maybe_encode_unsigned(bin) when is_binary(bin), do: bin
   defp maybe_encode_unsigned(int) when is_integer(int), do: :binary.encode_unsigned(int)
 end

@@ -14,7 +14,8 @@ defmodule ABI.Mixfile do
       ],
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      dialyzer: dialyzer()
     ]
   end
 
@@ -32,6 +33,12 @@ defmodule ABI.Mixfile do
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:jason, "~> 1.1", only: [:dev, :test]},
       {:exth_crypto, "~> 0.1.6"}
+    ]
+  end
+
+  defp dialyzer do
+    [
+      flags: [:error_handling, :race_conditions, :underspecs, :unknown, :unmatched_returns]
     ]
   end
 end
