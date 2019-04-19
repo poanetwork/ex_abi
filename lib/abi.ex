@@ -34,7 +34,7 @@ defmodule ABI do
       "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b457468657220546f6b656e000000000000000000000000000000000000000000"
 
       iex> File.read!("priv/dog.abi.json")
-      ...> |> Poison.decode!
+      ...> |> Jason.decode!
       ...> |> ABI.parse_specification
       ...> |> Enum.find(&(&1.function == "bark")) # bark(address,bool)
       ...> |> ABI.encode([<<1::160>> |> :binary.decode_unsigned, true])
@@ -67,7 +67,7 @@ defmodule ABI do
       [{"Ether Token"}]
 
       iex> File.read!("priv/dog.abi.json")
-      ...> |> Poison.decode!
+      ...> |> Jason.decode!
       ...> |> ABI.parse_specification
       ...> |> Enum.find(&(&1.function == "bark")) # bark(address,bool)
       ...> |> ABI.decode("b85d0bd200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001" |> Base.decode16!(case: :lower))
@@ -98,7 +98,7 @@ defmodule ABI do
   ## Examples
 
       iex> File.read!("priv/dog.abi.json")
-      ...> |> Poison.decode!
+      ...> |> Jason.decode!
       ...> |> ABI.parse_specification
       ...> |> ABI.find_and_decode("b85d0bd200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001" |> Base.decode16!(case: :lower))
       {%ABI.FunctionSelector{type: :function, function: "bark", input_names: ["at", "loudly"], method_id: <<184, 93, 11, 210>>, returns: [], types: [:address, :bool]}, [<<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1>>, true]}
@@ -116,7 +116,7 @@ defmodule ABI do
 
   Non-function entries (e.g. constructors) in the ABI specification are skipped. Fallback function entries are accepted.
 
-  This function can be used in combination with a JSON parser, e.g. [`Poison`](https://hex.pm/packages/poison), to parse ABI specification JSON files.
+  This function can be used in combination with a JSON parser, e.g. [`Jason`](https://hex.pm/packages/Jason), to parse ABI specification JSON files.
 
   Opts:
 
@@ -126,7 +126,7 @@ defmodule ABI do
   ## Examples
 
       iex> File.read!("priv/dog.abi.json")
-      ...> |> Poison.decode!
+      ...> |> Jason.decode!
       ...> |> ABI.parse_specification
       [%ABI.FunctionSelector{type: :function, function: "bark", input_names: ["at", "loudly"], method_id: <<184, 93, 11, 210>>, returns: [], types: [:address, :bool]},
        %ABI.FunctionSelector{type: :function, function: "rollover", method_id: <<176, 86, 180, 154>>, returns: [:bool], types: []}]
@@ -166,7 +166,7 @@ defmodule ABI do
       [%ABI.FunctionSelector{type: :function, function: nil, returns: [], types: [], method_id: nil}]
 
       iex> File.read!("priv/dog.abi.json")
-      ...> |> Poison.decode!
+      ...> |> Jason.decode!
       ...> |> ABI.parse_specification(include_events?: true)
       ...> |> Enum.filter(&(&1.type == :event))
       [%ABI.FunctionSelector{type: :event, function: "WantsPets", input_names: ["_from_human", "_number", "_belly"], inputs_indexed: [true, false, true], method_id: <<235, 155, 60, 76>>, types: [:string, {:uint, 256}, :bool]}]

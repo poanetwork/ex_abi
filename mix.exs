@@ -30,7 +30,7 @@ defmodule ABI.Mixfile do
     [
       {:dialyxir, "~> 1.0.0-rc.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:poison, "~> 3.1", only: [:dev, :test]},
+      {:jason, "~> 1.1", only: [:dev, :test]},
       {:exth_crypto, "~> 0.1.6"}
     ]
   end
