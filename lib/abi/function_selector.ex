@@ -9,12 +9,17 @@ defmodule ABI.FunctionSelector do
   @type type ::
           {:uint, integer()}
           | :bool
-          | :bytes
           | :string
           | :address
+          | :function
           | {:array, type}
           | {:array, type, non_neg_integer}
           | {:tuple, [type]}
+          | :bytes
+          | {:bytes, non_neg_integer}
+          | {:ufixed, non_neg_integer, non_neg_integer}
+          | {:fixed, non_neg_integer, non_neg_integer}
+          | {:int, integer}
 
   @typedoc """
   Struct to represent a function and its input and output types.
