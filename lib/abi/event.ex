@@ -46,7 +46,7 @@ defmodule ABI.Event do
       # second argument is not, so it is in data
       ...> data = "0000000000000000000000000000000000000000000000000000000000000000" |> Base.decode16!()
       ...> File.read!("priv/dog.abi.json")
-      ...> |> Poison.decode!()
+      ...> |> Jason.decode!()
       ...> |> ABI.parse_specification(include_events?: true)
       ...> |> ABI.Event.find_and_decode(topic1, topic2, topic3, topic4, data)
       {%ABI.FunctionSelector{
