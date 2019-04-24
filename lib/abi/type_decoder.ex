@@ -43,7 +43,7 @@ defmodule ABI.TypeDecoder do
       [-42]
 
 
-      iex> ABI.TypeEncoder.encode(["hello world"],[:string]) 
+      iex> ABI.TypeEncoder.encode(["hello world"],[:string])
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
       ...>        function: nil,
@@ -66,7 +66,7 @@ defmodule ABI.TypeDecoder do
       ...>    )
       [{17, true}]
 
-      iex> ABI.TypeEncoder.encode([[17,1]],[{:array,{:uint,32}}]) 
+      iex> ABI.TypeEncoder.encode([[17,1]],[{:array,{:uint,32}}])
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
       ...>        function: nil,
@@ -90,7 +90,7 @@ defmodule ABI.TypeDecoder do
       ...>    )
       [[17, 1], true, <<16, 32>>]
 
-      iex> ABI.TypeEncoder.encode([{"awesome", true}], [{:tuple, [:string, :bool]}]) 
+      iex> ABI.TypeEncoder.encode([{"awesome", true}], [{:tuple, [:string, :bool]}])
       ...> |> ABI.TypeDecoder.decode(
       ...>      %ABI.FunctionSelector{
       ...>        function: nil,
@@ -158,7 +158,7 @@ defmodule ABI.TypeDecoder do
 
   ## Examples
 
-      iex> ABI.TypeEncoder.encode([{"awesome", true}], [{:tuple, [:string, :bool]}]) 
+      iex> ABI.TypeEncoder.encode([{"awesome", true}], [{:tuple, [:string, :bool]}])
       ...> |> ABI.TypeDecoder.decode_raw([{:tuple, [:string, :bool]}])
       [{"awesome", true}]
   """
@@ -175,6 +175,36 @@ defmodule ABI.TypeDecoder do
       end)
 
     {Enum.reverse(reversed_result), binary_rest}
+  end
+
+  # TODO change to ExthCrypto.Math.mod when it's fixed ( mod(-75,32) == 21 )
+  def mod(x, n) do
+    remainder = rem(x, n)
+
+    if (remainder < 0 and n > 0) or (remainder > 0 and n < 0),
+      do: n + remainder,
+      else: remainder
+  end
+
+  @spec decode_bytes(binary(), non_neg_integer(), :left | :right) :: {binary(), binary()}
+  def decode_bytes(data, size_in_bytes, :left) do
+    total_size_in_bytes = size_in_bytes + mod(32 - size_in_bytes, 32)
+    padding_size_in_bytes = total_size_in_bytes - size_in_bytes
+
+    <<_padding::binary-size(padding_size_in_bytes), value::binary-size(size_in_bytes),
+      rest::binary()>> = data
+
+    {value, rest}
+  end
+
+  def decode_bytes(data, size_in_bytes, :right) do
+    total_size_in_bytes = size_in_bytes + mod(32 - size_in_bytes, 32)
+    padding_size_in_bytes = total_size_in_bytes - size_in_bytes
+
+    <<value::binary-size(size_in_bytes), _padding::binary-size(padding_size_in_bytes),
+      rest::binary()>> = data
+
+    {value, rest}
   end
 
   @spec decode_type(ABI.FunctionSelector.type(), binary()) :: {any(), binary()}
@@ -261,34 +291,5 @@ defmodule ABI.TypeDecoder do
   defp decode_int(data, _size_in_bits) do
     <<value::signed-256, rest::binary>> = data
     {value, rest}
-  end
-
-  # TODO change to ExthCrypto.Math.mod when it's fixed ( mod(-75,32) == 21 ) 
-  def mod(x, n) do
-    remainder = rem(x, n)
-
-    if (remainder < 0 and n > 0) or (remainder > 0 and n < 0),
-      do: n + remainder,
-      else: remainder
-  end
-
-  @spec decode_bytes(binary(), integer(), atom()) :: {binary(), binary()}
-  def decode_bytes(data, size_in_bytes, padding_direction) do
-    total_size_in_bytes = size_in_bytes + mod(32 - size_in_bytes, 32)
-    padding_size_in_bytes = total_size_in_bytes - size_in_bytes
-
-    case padding_direction do
-      :left ->
-        <<_padding::binary-size(padding_size_in_bytes), value::binary-size(size_in_bytes),
-          rest::binary()>> = data
-
-        {value, rest}
-
-      :right ->
-        <<value::binary-size(size_in_bytes), _padding::binary-size(padding_size_in_bytes),
-          rest::binary()>> = data
-
-        {value, rest}
-    end
   end
 end

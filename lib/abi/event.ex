@@ -46,7 +46,7 @@ defmodule ABI.Event do
       # second argument is not, so it is in data
       ...> data = "0000000000000000000000000000000000000000000000000000000000000000" |> Base.decode16!()
       ...> File.read!("priv/dog.abi.json")
-      ...> |> Poison.decode!()
+      ...> |> Jason.decode!()
       ...> |> ABI.parse_specification(include_events?: true)
       ...> |> ABI.Event.find_and_decode(topic1, topic2, topic3, topic4, data)
       {%ABI.FunctionSelector{
@@ -65,7 +65,7 @@ defmodule ABI.Event do
       }
   """
   @spec find_and_decode([FunctionSelector.t()], topic, topic, topic, topic, binary) ::
-          {FunctionSelector.t(), [event_value]}
+          {FunctionSelector.t(), [event_value]} | {:error, any}
   def find_and_decode(function_selectors, topic1, topic2, topic3, topic4, data) do
     with {:ok, method_id, _rest} <- Util.split_method_id(topic1),
          {:ok, selector} when not is_nil(selector) <-
