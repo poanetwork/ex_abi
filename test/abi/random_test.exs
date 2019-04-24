@@ -30,8 +30,6 @@ defmodule ABI.RandomTest do
   # since `:address` type is decoded as `{:bytes, 20}`
   @except [:address]
 
-  #
-
   # generates a `non_neg_integer`
   defp length(), do: StreamData.map(integer(), &abs/1)
 
@@ -113,14 +111,13 @@ defmodule ABI.RandomTest do
     fixed_list(Enum.map(types, &arg/1))
   end
 
-  #
-
   describe "encode ∘ decode = id" do
     property "holds for any type" do
-      check all types <- types(),
-                args <- args(types) do
-        #
+      check all types <- types(), args <- args(types) do
         assert args == TypeEncoder.encode(args, types) |> TypeDecoder.decode(types)
+
+        result = TypeEncoder.encode(args, types)
+        assert result == TypeDecoder.decode(result, types) |> TypeEncoder.encode(types)
       end
     end
   end
