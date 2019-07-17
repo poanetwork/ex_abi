@@ -1,5 +1,7 @@
+# 0.2.2
+* Add support for constructor selectors (https://github.com/poanetwork/ex_abi/pull/21)
 # 0.2.1
-* Dialyzer fixes (ps://github.com/poanetwork/ex_abi/pull/18)
+* Dialyzer fixes (https://github.com/poanetwork/ex_abi/pull/18)
 # 0.2.0
 * Fix decoding array types (https://github.com/poanetwork/ex_abi/pull/14)
 # 0.1.18
