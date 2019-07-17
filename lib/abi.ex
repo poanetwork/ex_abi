@@ -155,7 +155,7 @@ defmodule ABI do
       ...>   "type" => "constructor"
       ...> }]
       ...> |> ABI.parse_specification
-      []
+      [%ABI.FunctionSelector{function: nil, input_names: ["_numProposals"], inputs_indexed: nil, method_id: <<99, 53, 230, 34>>, returns: [], type: :constructor, types: [uint: 8]}]
 
       iex> [%{
       ...>   "payable" => false,
