@@ -33,12 +33,12 @@ defmodule ABI.FunctionSelector do
   * `:inputs_index` - A list of true/false values denoting if each input is indexed. Only populated for events.
   """
   @type t :: %__MODULE__{
-          function: String.t(),
+          function: String.t() | nil,
           method_id: String.t() | nil,
           input_names: [String.t()],
           types: [type],
           returns: [type],
-          type: :event | :function,
+          type: :event | :function | :constructor,
           inputs_indexed: [boolean]
         }
 
@@ -166,6 +166,23 @@ defmodule ABI.FunctionSelector do
       returns: output_types,
       input_names: input_names,
       type: :function
+    }
+
+    add_method_id(selector)
+  end
+
+  def parse_specification_item(%{"type" => "constructor"} = item) do
+    %{
+      "inputs" => named_inputs
+    } = item
+
+    input_types = Enum.map(named_inputs, &parse_specification_type/1)
+    input_names = Enum.map(named_inputs, &Map.get(&1, "name"))
+
+    selector = %ABI.FunctionSelector{
+      types: input_types,
+      input_names: input_names,
+      type: :constructor
     }
 
     add_method_id(selector)
