@@ -43,5 +43,35 @@ defmodule ABI.TypeEncoderTest do
         ABI.TypeEncoder.encode(data_to_encode, selector)
       end
     end
+
+    # test "temp" do # the same as in doctest
+    #   res =
+    #     [{"awesome", true}]
+    #     |> ABI.TypeEncoder.encode(%ABI.FunctionSelector{
+    #       function: nil,
+    #       types: [
+    #         {:tuple, [:string, :bool]}
+    #       ]
+    #     })
+    #     |> Base.encode16(case: :lower)
+
+    #   assert res ==
+    #            "000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000007617765736f6d6500000000000000000000000000000000000000000000000000"
+    # end
+
+    # test "temp2" do # the same as in doctest
+    #   res =
+    #     ["hello world"]
+    #     |> ABI.TypeEncoder.encode(%ABI.FunctionSelector{
+    #       function: nil,
+    #       types: [
+    #         :string
+    #       ]
+    #     })
+    #     |> Base.encode16(case: :lower)
+
+    #   assert res ==
+    #            "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b68656c6c6f20776f726c64000000000000000000000000000000000000000000"
+    # end
   end
 end

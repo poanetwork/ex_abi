@@ -132,5 +132,14 @@ defmodule ABITest do
 
       assert parse_specification(abi) == expected
     end
+
+    test "temp" do # the same as inn doctest
+      res =
+        ABI.encode("(string)", [{"Ether Token"}])
+        |> Base.encode16(case: :lower)
+
+      assert res ==
+               "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b457468657220546f6b656e000000000000000000000000000000000000000000"
+    end
   end
 end

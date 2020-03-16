@@ -48,7 +48,7 @@ defmodule ABI.TypeEncoder do
       ...>      }
       ...>    )
       ...> |> Base.encode16(case: :lower)
-      "000000000000000000000000000000000000000000000000000000000000000b68656c6c6f20776f726c64000000000000000000000000000000000000000000"
+      "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b68656c6c6f20776f726c64000000000000000000000000000000000000000000"
 
       iex> [{"awesome", true}]
       ...> |> ABI.TypeEncoder.encode(
@@ -109,7 +109,7 @@ defmodule ABI.TypeEncoder do
       ...>      }
       ...>    )
       ...> |> Base.encode16(case: :lower)
-      "000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
+      "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
   """
 
   def encode(data, %ABI.FunctionSelector{function: nil, types: types}) do
@@ -117,7 +117,31 @@ defmodule ABI.TypeEncoder do
   end
 
   def encode(data, %ABI.FunctionSelector{types: types} = function_selector) do
-    {result, []} = encode_type({:tuple, types}, [List.to_tuple(data)])
+    # initial_offset = Enum.count(types)
+    # initial_offset = 0
+    # initial_offset =
+    #   Enum.reduce(types, 0, fn type, offset ->
+    #     IO.inspect("REDUCED TYPE")
+    #     IO.inspect(type)
+
+    #     case type do
+    #       # {:array, _, size} ->
+    #       #   offset + 1 #+ size
+
+    #       # {:bytes, _, size} ->
+    #       #   offset + 1 #+ size
+
+    #       _ ->
+    #         offset + 1
+    #     end
+    #   end)
+    initial_offset = Enum.count(types)
+
+    IO.inspect("INITIAL_OFFSET:")
+    IO.inspect(initial_offset)
+
+    {result, _, _, []} = encode_type({:tuple, types}, initial_offset, <<>>, [List.to_tuple(data)])
+
     encode_method_id(function_selector) <> result
   end
 
@@ -138,7 +162,58 @@ defmodule ABI.TypeEncoder do
       "000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000007617765736f6d6500000000000000000000000000000000000000000000000000"
   """
   def encode_raw(data, types) do
-    do_encode(types, data, [])
+    IO.inspect("encode_raw")
+    IO.inspect(types)
+
+    # filtered_types =
+    #   types
+    #   |> Enum.filter(fn type ->
+    #     false
+    #     # if ABI.FunctionSelector.is_dynamic?(type) do
+    #     #   false
+    #     # else
+    #     #   true
+    #     # end
+    #     # case type do
+    #     #   {:tuple, _} ->
+    #     #     false
+
+    #     #   {:array, _} ->
+    #     #     false
+
+    #     #   {:array, _, _} ->
+    #     #     false
+
+    #     #   _ ->
+    #     #     true
+    #     # end
+    #   end)
+
+    # IO.inspect("filtered_types")
+    # IO.inspect(filtered_types)
+    # initial_offset Enum.count(filtered_types)
+    # initial_offset = 0
+    # initial_offset =
+    #   Enum.reduce(types, 0, fn type, offset ->
+    #     IO.inspect("REDUCED TYPE")
+    #     IO.inspect(type)
+
+    #     case type do
+    #       # {:array, _, size} ->
+    #       #   offset + 1 #+ size
+
+    #       # {:bytes, _, size} ->
+    #       #   offset + 1 #+ size
+
+    #       _ ->
+    #         offset + 1
+    #     end
+    #   end)
+    initial_offset = Enum.count(types)
+
+    IO.inspect("INITIAL_OFFSET:")
+    IO.inspect(initial_offset)
+    do_encode(types, initial_offset, <<>>, data, [])
   end
 
   @spec encode_method_id(%ABI.FunctionSelector{}) :: binary()
@@ -158,27 +233,40 @@ defmodule ABI.TypeEncoder do
     init
   end
 
-  @spec do_encode([ABI.FunctionSelector.type()], [any()], [binary()]) :: binary()
-  defp do_encode([], _, acc), do: :erlang.iolist_to_binary(Enum.reverse(acc))
-
-  defp do_encode([type | remaining_types], data, acc) do
-    {encoded, remaining_data} = encode_type(type, data)
-
-    do_encode(remaining_types, remaining_data, [encoded | acc])
+  @spec do_encode([ABI.FunctionSelector.type()], integer(), binary(), [any()], [binary()]) ::
+          binary()
+  defp do_encode([], _, dynamic_data, _, acc) do
+    :erlang.iolist_to_binary(Enum.reverse(acc)) <> dynamic_data
   end
 
-  @spec encode_type(ABI.FunctionSelector.type(), [any()]) :: {binary(), [any()]}
-  defp encode_type({:uint, size}, [data | rest]) do
-    {encode_uint(data, size), rest}
+  defp do_encode([type | remaining_types], offset, dynamic_data, data, acc) do
+    IO.inspect("do_encode")
+
+    {encoded, offset, dynamic_data, remaining_data} =
+      encode_type(type, offset, dynamic_data, data)
+
+    do_encode(remaining_types, offset, dynamic_data, remaining_data, [encoded | acc])
   end
 
-  defp encode_type({:int, size}, [data | rest]) do
-    {encode_int(data, size), rest}
+  # @spec encode_type(ABI.FunctionSelector.type(), integer(), any(), [any()]) ::
+  #         {binary(), integer(), any(), [any()]}
+  defp encode_type({:uint, size}, offset, dynamic_data, [data | rest]) do
+    # offset = offset + 1
+    {encode_uint(data, size), offset, dynamic_data, rest}
   end
 
-  defp encode_type(:address, data), do: encode_type({:uint, 160}, data)
+  defp encode_type({:int, size}, offset, dynamic_data, [data | rest]) do
+    # offset = offset + 1
+    {encode_int(data, size), offset, dynamic_data, rest}
+  end
 
-  defp encode_type(:bool, [data | rest]) do
+  defp encode_type(:address, offset, dynamic_data, data) do
+    # offset = offset + 1
+    encode_type({:uint, 160}, offset, dynamic_data, data)
+  end
+
+  defp encode_type(:bool, offset, dynamic_data, [data | rest]) do
+    # offset = offset + 1
     value =
       case data do
         true -> encode_uint(1, 8)
@@ -186,70 +274,262 @@ defmodule ABI.TypeEncoder do
         _ -> raise "Invalid data for bool: #{data}"
       end
 
-    {value, rest}
+    {value, offset, dynamic_data, rest}
   end
 
-  defp encode_type(:string, [data | rest]) do
-    {encode_uint(byte_size(data), 256) <> encode_bytes(data), rest}
+  defp encode_type(:string, offset, dynamic_data, [data | rest]) do
+    # offset = offset + 1
+    IO.inspect("encode_type STRING")
+    IO.inspect("data STRING:")
+    IO.inspect(data)
+    IO.inspect("rest STRING:")
+    IO.inspect(rest)
+    IO.inspect("offset STRING:")
+    IO.inspect(offset)
+    # length + value todo: value can spread to more than 32 bytes
+    new_offset = offset + 1 + 1
+
+    IO.inspect("DYNAMIC_DATA BEFORE (STRING)")
+    IO.inspect(Base.encode16(dynamic_data))
+
+    dynamic_data =
+      if dynamic_data == <<>> do
+        encode_uint(byte_size(data), 256) <> encode_bytes(data)
+      else
+        dynamic_data <> encode_uint(byte_size(data), 256) <> encode_bytes(data)
+      end
+
+    IO.inspect("DYNAMIC_DATA AFTER (STRING)")
+    IO.inspect(Base.encode16(dynamic_data, case: :lower))
+
+    current_offset = encode_uint(offset * 32, 256)
+
+    IO.inspect("CURRENT_OFFSET")
+    IO.inspect(Base.encode16(current_offset, case: :lower))
+
+    {current_offset, new_offset, dynamic_data, rest}
   end
 
-  defp encode_type(:bytes, [data | rest]) do
-    {encode_uint(byte_size(data), 256) <> encode_bytes(data), rest}
+  defp encode_type(:bytes, offset, dynamic_data, [data | rest]) do
+    # offset = offset + 1
+    IO.inspect("encode_type BYTES")
+    IO.inspect(offset)
+    IO.inspect(dynamic_data)
+    IO.inspect(data)
+    IO.inspect(rest)
+    IO.inspect("offset:")
+    IO.inspect(offset)
+    # length + value todo: value can spread to more than 32 bytes
+    new_offset = offset + 1 + 1
+    # {encode_uint(byte_size(data), 256) <> encode_bytes(data), offset, dynamic_data, rest}
+    IO.inspect("DYNAMIC_DATA BEFORE (BYTES)")
+    IO.inspect(Base.encode16(dynamic_data, case: :lower))
+
+    dynamic_data =
+      if dynamic_data == <<>> do
+        encode_uint(byte_size(data), 256) <> encode_bytes(data)
+      else
+        dynamic_data <> encode_uint(byte_size(data), 256) <> encode_bytes(data)
+      end
+
+    IO.inspect("DYNAMIC_DATA AFTER (BYTES)")
+    IO.inspect(Base.encode16(dynamic_data, case: :lower))
+
+    current_offset = encode_uint(offset * 32, 256)
+
+    IO.inspect("CURRENT_OFFSET")
+    IO.inspect(Base.encode16(current_offset, case: :lower))
+
+    {current_offset, new_offset, dynamic_data, rest}
   end
 
-  defp encode_type({:bytes, size}, [data | rest])
+  defp encode_type({:bytes, size}, offset, dynamic_data, [data | rest])
        when is_binary(data) and byte_size(data) <= size do
-    {encode_bytes(data), rest}
+    {encode_bytes(data), offset, dynamic_data, rest}
   end
 
-  defp encode_type({:bytes, size}, [data | _]) when is_binary(data) do
+  defp encode_type({:bytes, size}, _, _, [data | _]) when is_binary(data) do
     raise "size mismatch for bytes#{size}: #{inspect(data)}"
   end
 
-  defp encode_type({:bytes, size}, [data | _]) do
+  defp encode_type({:bytes, size}, _, _, [data | _]) do
     raise "wrong datatype for bytes#{size}: #{inspect(data)}"
   end
 
-  defp encode_type({:tuple, types}, [data | rest]) do
+  defp encode_type({:tuple, types}, offset, dynamic_data, [data | rest]) do
+    IO.inspect("encode_type TUPLE")
+    IO.inspect(types)
+    IO.inspect(offset)
+    IO.inspect("TUPLE DATA:")
+    IO.inspect(data)
     # all head items are 32 bytes in length and there will be exactly
     # `count(types)` of them, so the tail starts at `32 * count(types)`.
     tail_start = (types |> Enum.count()) * 32
+    # initial_offset = Enum.count(types)
+    # breakes a lot tests
+    is_dynamic_tuple = Enum.any?(types, fn type -> ABI.FunctionSelector.is_dynamic?(type) end)
+    IO.inspect("IS_DYNAMIC_TUPLE:")
+    IO.inspect(is_dynamic_tuple)
 
-    {head, tail, [], _} =
-      Enum.reduce(types, {<<>>, <<>>, data |> Tuple.to_list(), tail_start}, fn type,
-                                                                               {head, tail, data,
-                                                                                tail_position} ->
-        {el, rest} = encode_type(type, data)
+    # prefix = if is_dynamic_tuple do
+    #   encode_uint(offset * 32, 256)
+    # else
+    # <<>>
+    # end
 
-        if ABI.FunctionSelector.is_dynamic?(type) do
-          # If we're a dynamic type, just encoded the length to head and the element to body
-          {head <> encode_uint(tail_position, 256), tail <> el, rest,
-           tail_position + byte_size(el)}
-        else
-          # If we're a static type, simply encode the el to the head
-          {head <> el, tail, rest, tail_position}
+    # initial_offset = if is_dynamic_tuple, do: offset + 1, else: offset
+    initial_offset = offset - 1 + Enum.count(types)
+
+    IO.inspect("INITIAL_OFFSET:")
+    IO.inspect(initial_offset)
+
+    # inital_head =
+    #   if is_dynamic_tuple do
+    #     # fragile
+    #     encode_uint(initial_offset * 32, 256)
+    #     # encode_uint((offset + Enum.count(types)) * 32, 256)
+    #     # if offset > 0 do
+    #     #   encode_uint((offset + Enum.count(types)) * 32, 256)
+    #     # else
+    #     #   encode_uint(Enum.count(types) * 32, 256)
+    #     # end
+    #   else
+    #     <<>>
+    #   end
+
+    # IO.inspect("INITAL_HEAD:")
+    # IO.inspect(Base.encode16(inital_head, case: :lower))
+
+    # breakes a lot of tests
+    # initial_offset = Enum.count(types) + offset
+
+    {head, tail, [], _, new_offset, new_dynamic_data} =
+      Enum.reduce(
+        types,
+        {<<>>, <<>>, data |> Tuple.to_list(), tail_start, initial_offset, dynamic_data},
+        fn type, {head, tail, data, tail_position, offset, dynamic_data} ->
+          IO.inspect("TUPLE OFFSET:")
+          IO.inspect(offset)
+          IO.inspect("TUPLE TYPE:")
+          IO.inspect(type)
+          {el, new_offset, new_dynamic_data, rest} = encode_type(type, offset, dynamic_data, data)
+
+          IO.inspect("TUPLE EL:")
+          IO.inspect(Base.encode16(el, case: :lower))
+
+          IO.inspect("TUPLE HEAD:")
+          IO.inspect(Base.encode16(head, case: :lower))
+
+          IO.inspect("TUPLE TAIL:")
+          IO.inspect(Base.encode16(tail, case: :lower))
+
+          IO.inspect("TUPLE TAIL_POSITION:")
+          IO.inspect(tail_position)
+
+          IO.inspect("TUPLE NEW_OFFSET:")
+          IO.inspect(new_offset)
+
+          IO.inspect("TUPLE REST:")
+          IO.inspect(rest)
+
+          {head <> el, tail, rest, new_offset * 32, new_offset, new_dynamic_data}
+          # if ABI.FunctionSelector.is_dynamic?(type) do
+          #   IO.inspect("TUPLE #1")
+          #   # If we're a dynamic type, just encoded the length to head and the element to body
+          #   # {head <> encode_uint(tail_position, 256), tail <> el, rest,
+          #   # tail_position + byte_size(el), new_offset, new_dynamic_data}
+          #   # {head <> encode_uint(tail_position, 256), tail, rest, tail_position + byte_size(el),
+          #   # {head <> el, tail, rest, tail_position + byte_size(el), new_offset, new_dynamic_data}
+          #   # {head <> encode_uint(tail_position, 256), tail, rest, tail_position + byte_size(el),
+          #   #  new_offset, new_dynamic_data} #good (5)
+          #   # {head <> encode_uint(tail_position, 256), tail, rest, tail_position + new_offset * 32,
+          #   #  new_offset, new_dynamic_data} #very good (3)
+          #   # {head <> encode_uint(tail_position, 256), tail, rest, new_offset * 32,
+          #   #  new_offset, new_dynamic_data}
+          #   {head <> el, tail, rest, new_offset * 32, new_offset, new_dynamic_data}
+          # else
+          #   IO.inspect("TUPLE #2")
+          #   # If we're a static type, simply encode the el to the head
+          #   # {head <> el, tail, rest, tail_position, new_offset, new_dynamic_data}
+          #   {head <> el, tail, rest, new_offset * 32, new_offset, new_dynamic_data}
+          # end
         end
-      end)
+      )
 
-    {head <> tail, rest}
+    new_offset = new_offset + Enum.count(types)
+
+    IO.inspect("TUPLE HEAD FINAL:")
+    IO.inspect(Base.encode16(head, case: :lower))
+    IO.inspect("TUPLE TAIL FINAL:")
+    IO.inspect(Base.encode16(tail, case: :lower))
+    IO.inspect("TUPLE NEW_OFFSET FINAL:")
+    IO.inspect(new_offset)
+    IO.inspect("TUPLE NEW_DYNAMIC_DATA FINAL:")
+    IO.inspect(Base.encode16(new_dynamic_data, case: :lower))
+    IO.inspect("TUPLE REST FINAL:")
+    IO.inspect(rest)
+
+    {head <> tail, new_offset, new_dynamic_data, rest}
+    # {prefix <> head <> tail, new_offset, new_dynamic_data, rest}
+    # {encode_uint(offset * 32, 256) <> head <> tail, new_offset, new_dynamic_data, rest}
   end
 
-  defp encode_type({:array, type, element_count}, [data | rest]) do
+  defp encode_type({:array, type, element_count}, offset, dynamic_data, [data | rest]) do
+    IO.inspect("encode_type ARRAY")
     repeated_type = List.duplicate(type, element_count)
-    encode_type({:tuple, repeated_type}, [data |> List.to_tuple() | rest])
+    IO.inspect("repeated_type:")
+    IO.inspect(repeated_type)
+    IO.inspect("offset:")
+    IO.inspect(offset)
+    IO.inspect("dynamic_data:")
+    IO.inspect(dynamic_data)
+    IO.inspect("data:")
+    IO.inspect(data)
+    encode_type({:tuple, repeated_type}, offset, dynamic_data, [data |> List.to_tuple() | rest])
   end
 
-  defp encode_type({:array, type}, [data | _rest] = all_data) do
+  defp encode_type({:array, type}, offset, dynamic_data, [data | _rest] = all_data) do
+    IO.inspect("array offset:")
+    IO.inspect(offset)
+    IO.inspect("array data:")
+    IO.inspect(data)
+
     element_count = Enum.count(data)
 
-    encoded_uint = encode_uint(element_count, 256)
-    {encoded_array, rest} = encode_type({:array, type, element_count}, all_data)
+    {encoded_array, new_offset, dynamic_data, rest} =
+      encode_type({:array, type, element_count}, offset, dynamic_data, all_data)
 
-    {encoded_uint <> encoded_array, rest}
+    IO.inspect("array new_offset:")
+    IO.inspect(new_offset)
+
+    # offset = offset + 1
+
+    encoded_uint = encode_uint(element_count, 256)
+    IO.inspect("DYNAMIC_DATA BEFORE 1")
+    IO.inspect(Base.encode16(dynamic_data, case: :lower))
+
+    dynamic_data =
+      if dynamic_data == <<>> do
+        encoded_uint <> encoded_array
+      else
+        dynamic_data <> encoded_uint <> encoded_array
+      end
+
+    IO.inspect("DYNAMIC_DATA AFTER 1")
+    IO.inspect(Base.encode16(dynamic_data, case: :lower))
+
+    IO.inspect("offset * 32:")
+    IO.inspect(offset * 32)
+
+    IO.inspect("encode_uint(offset * 32, 256):")
+    IO.inspect(Base.encode16(encode_uint(offset * 32, 256), case: :lower))
+
+    {encode_uint(offset * 32, 256), new_offset, dynamic_data, rest}
+    # {<<>>, new_offset, dynamic_data, rest}
   end
 
-  defp encode_type(els, _) do
-    raise "Unsupported encoding type: #{inspect(els)}"
+  defp encode_type(els, a, b, c) do
+    raise "Unsupported encoding type: #{inspect(els)} #{inspect(a)} #{inspect(b)} #{inspect(c)}"
   end
 
   def encode_bytes(bytes) do

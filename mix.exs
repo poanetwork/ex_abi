@@ -4,11 +4,11 @@ defmodule ABI.Mixfile do
   def project do
     [
       app: :ex_abi,
-      version: "0.2.2",
+      version: "0.3.0",
       elixir: "~> 1.9",
       description: "Ethereum's ABI Interface",
       package: [
-        maintainers: ["Ayrat Badykov"],
+        maintainers: ["Ayrat Badykov, Victor Baranov"],
         licenses: ["GPL-3.0"],
         links: %{"GitHub" => "https://github.com/poanetwork/ex_abi"}
       ],
