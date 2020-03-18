@@ -43,35 +43,31 @@ defmodule ABI.TypeEncoderTest do
         ABI.TypeEncoder.encode(data_to_encode, selector)
       end
     end
+  end
 
-    # test "temp" do # the same as in doctest
-    #   res =
-    #     [{"awesome", true}]
-    #     |> ABI.TypeEncoder.encode(%ABI.FunctionSelector{
-    #       function: nil,
-    #       types: [
-    #         {:tuple, [:string, :bool]}
-    #       ]
-    #     })
-    #     |> Base.encode16(case: :lower)
+  describe "encode" do
+    test "encode array of addresses" do
+      res =
+        [
+          [
+            <<11, 47, 94, 47, 60, 189, 134, 78, 170, 44, 100, 46, 55, 105, 193, 88, 35, 97, 202,
+              246>>,
+            <<170, 148, 182, 135, 211, 249, 85, 42, 69, 59, 129, 178, 131, 76, 165, 55, 120, 152,
+              13, 192>>,
+            <<49, 44, 35, 14, 125, 109, 176, 82, 36, 246, 2, 8, 166, 86, 227, 84, 28, 92, 66,
+              186>>
+          ]
+        ]
+        |> ABI.TypeEncoder.encode(%ABI.FunctionSelector{
+          function: nil,
+          types: [
+            {:array, :address}
+          ]
+        })
+        |> Base.encode16(case: :lower)
 
-    #   assert res ==
-    #            "000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000007617765736f6d6500000000000000000000000000000000000000000000000000"
-    # end
-
-    # test "temp2" do # the same as in doctest
-    #   res =
-    #     ["hello world"]
-    #     |> ABI.TypeEncoder.encode(%ABI.FunctionSelector{
-    #       function: nil,
-    #       types: [
-    #         :string
-    #       ]
-    #     })
-    #     |> Base.encode16(case: :lower)
-
-    #   assert res ==
-    #            "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b68656c6c6f20776f726c64000000000000000000000000000000000000000000"
-    # end
+      assert res ==
+               "000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000b2f5e2f3cbd864eaa2c642e3769c1582361caf6000000000000000000000000aa94b687d3f9552a453b81b2834ca53778980dc0000000000000000000000000312c230e7d6db05224f60208a656e3541c5c42ba"
+    end
   end
 end
