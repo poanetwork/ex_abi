@@ -69,5 +69,56 @@ defmodule ABI.TypeEncoderTest do
       assert res ==
                "000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000b2f5e2f3cbd864eaa2c642e3769c1582361caf6000000000000000000000000aa94b687d3f9552a453b81b2834ca53778980dc0000000000000000000000000312c230e7d6db05224f60208a656e3541c5c42ba"
     end
+
+    test "encode bytes" do
+      data = [<<1, 35, 69, 103, 137>>]
+
+      function_selector = %ABI.FunctionSelector{
+        function: nil,
+        types: [:bytes]
+      }
+
+      encoded_pattern =
+        """
+        0000000000000000000000000000000000000000000000000000000000000020
+        0000000000000000000000000000000000000000000000000000000000000005
+        0123456789000000000000000000000000000000000000000000000000000000
+        """
+        |> encode_multiline_string()
+
+      assert Base.encode16(ABI.TypeEncoder.encode(data, function_selector), case: :lower) ==
+               Base.encode16(encoded_pattern, case: :lower)
+
+      data = [<<1, 35, 69, 103, 137>>]
+
+      function_selector = %ABI.FunctionSelector{
+        function: "returnBytes1",
+        input_names: ["arr"],
+        inputs_indexed: nil,
+        method_id: <<223, 65, 143, 191>>,
+        returns: [:bytes],
+        type: :function,
+        types: [:bytes]
+      }
+
+      encoded_pattern =
+        """
+        df418fbf
+        0000000000000000000000000000000000000000000000000000000000000020
+        0000000000000000000000000000000000000000000000000000000000000005
+        0123456789000000000000000000000000000000000000000000000000000000
+        """
+        |> encode_multiline_string()
+
+      assert Base.encode16(ABI.encode(function_selector, data), case: :lower) ==
+               Base.encode16(encoded_pattern, case: :lower)
+    end
+  end
+
+  defp encode_multiline_string(data) do
+    data
+    |> String.split("\n", trim: true)
+    |> Enum.join()
+    |> Base.decode16!(case: :mixed)
   end
 end

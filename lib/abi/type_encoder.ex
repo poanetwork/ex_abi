@@ -119,9 +119,10 @@ defmodule ABI.TypeEncoder do
   def encode(data, %ABI.FunctionSelector{types: types} = function_selector) do
     initial_offset = Enum.count(types)
 
-    {result, _, _, []} = encode_type({:tuple, types}, initial_offset, <<>>, [List.to_tuple(data)])
+    {result, _, dynamic_data, []} =
+      encode_type({:tuple, types}, initial_offset, <<>>, [List.to_tuple(data)])
 
-    encode_method_id(function_selector) <> result
+    encode_method_id(function_selector) <> result <> dynamic_data
   end
 
   def encode(data, types) do
