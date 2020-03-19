@@ -1,3 +1,5 @@
+# 0.3.0
+* Fix encoding/decoding of dynamic size types (https://github.com/poanetwork/ex_abi/pull/24)
 # 0.2.2
 * Add support for constructor selectors (https://github.com/poanetwork/ex_abi/pull/21)
 # 0.2.1

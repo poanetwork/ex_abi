@@ -170,7 +170,13 @@ defmodule ABI.TypeDecoder do
   def do_decode_raw(binary_data, types) do
     {reversed_result, binary_rest} =
       Enum.reduce(types, {[], binary_data}, fn type, {acc, binary} ->
-        {value, rest} = decode_type(type, binary)
+        {value, rest} =
+          if ABI.FunctionSelector.is_dynamic?(type) do
+            decode_type(type, binary, binary_data)
+          else
+            decode_type(type, binary)
+          end
+
         {[value | acc], rest}
       end)
 
@@ -186,7 +192,8 @@ defmodule ABI.TypeDecoder do
       else: remainder
   end
 
-  @spec decode_bytes(binary(), non_neg_integer(), :left | :right) :: {binary(), binary()}
+  @spec decode_bytes(binary(), non_neg_integer(), :left) ::
+          {binary(), binary()}
   def decode_bytes(data, size_in_bytes, :left) do
     total_size_in_bytes = size_in_bytes + mod(32 - size_in_bytes, 32)
     padding_size_in_bytes = total_size_in_bytes - size_in_bytes
@@ -197,24 +204,53 @@ defmodule ABI.TypeDecoder do
     {value, rest}
   end
 
-  def decode_bytes(data, size_in_bytes, :right) do
+  @spec decode_bytes(binary(), non_neg_integer(), :right, binary(), binary()) ::
+          {binary(), binary()}
+  def decode_bytes(_, size_in_bytes, :right, full_data, _) do
     total_size_in_bytes = size_in_bytes + mod(32 - size_in_bytes, 32)
     padding_size_in_bytes = total_size_in_bytes - size_in_bytes
 
     <<value::binary-size(size_in_bytes), _padding::binary-size(padding_size_in_bytes),
-      rest::binary()>> = data
+      rest2::binary()>> = full_data
+
+    {value, rest2}
+  end
+
+  @spec decode_bytes(binary(), non_neg_integer(), :right, binary()) ::
+          {binary(), binary()}
+  def decode_bytes(data, size_in_bytes, :right, rest) do
+    total_size_in_bytes = size_in_bytes + mod(32 - size_in_bytes, 32)
+    padding_size_in_bytes = total_size_in_bytes - size_in_bytes
+
+    <<value::binary-size(size_in_bytes), _padding::binary-size(padding_size_in_bytes),
+      _rest::binary()>> = data
 
     {value, rest}
   end
 
-  @spec decode_type(ABI.FunctionSelector.type(), binary()) :: {any(), binary()}
-  defp decode_type({:uint, size_in_bits}, data), do: decode_uint(data, size_in_bits)
+  @spec decode_type(ABI.FunctionSelector.type(), binary(), binary()) ::
+          {any(), binary(), binary()}
+  defp decode_type({:uint, size_in_bits}, data) do
+    {value, rest} = decode_uint(data, size_in_bits)
+    {value, rest}
+  end
 
-  defp decode_type({:int, size_in_bits}, data), do: decode_int(data, size_in_bits)
+  defp decode_type({:int, size_in_bits}, data) do
+    {value, rest} = decode_int(data, size_in_bits)
+    {value, rest}
+  end
 
   defp decode_type({:array, type}, data) do
-    {count, bytes} = decode_uint(data, 256)
-    decode_type({:array, type, count}, bytes)
+    {offset, rest_bytes} = decode_uint(data, 256)
+    <<_padding::binary-size(offset), rest_data::binary>> = data
+    {count, bytes} = decode_uint(rest_data, 256)
+    array_elements_bytes = 32 * count
+    <<final_bytes::binary-size(array_elements_bytes), _rest_data::binary>> = bytes
+    decode_type({:array, type, count}, final_bytes, rest_bytes)
+  end
+
+  defp decode_type({:bytes, size}, data) when size > 0 and size <= 32 do
+    decode_bytes(data, size, :right, data, data)
   end
 
   defp decode_type({:array, type, size}, data) do
@@ -223,26 +259,27 @@ defmodule ABI.TypeDecoder do
     {Tuple.to_list(tuple), bytes}
   end
 
+  defp decode_type(:bytes, data) do
+    {byte_size, bytes} = decode_uint(data, 256)
+    decode_bytes(bytes, byte_size, :right, <<>>)
+  end
+
   defp decode_type({:tuple, types}, data) do
-    {reversed_result, reversed_dynamic_types, binary} =
+    {reversed_result, _, binary} =
       Enum.reduce(types, {[], [], data}, fn type, {acc, dynamic, binary} ->
         if ABI.FunctionSelector.is_dynamic?(type) do
-          {_, binary} = decode_uint(binary, 256)
-          {[:dynamic | acc], [type | dynamic], binary}
+          {val, binary} = decode_type(type, binary, data)
+          {[val | acc], [type | dynamic], binary}
         else
           {val, binary} = decode_type(type, binary)
           {[val | acc], dynamic, binary}
         end
       end)
 
-    {reversed_result_dynamic, binary} =
-      do_decode_raw(binary, Enum.reverse(reversed_dynamic_types))
-
-    result_dynamic = Enum.reverse(reversed_result_dynamic)
+    result_dynamic = []
 
     {result, _} =
       Enum.reduce(reversed_result, {[], result_dynamic}, fn
-        :dynamic, {acc, [value | dynamic]} -> {[value | acc], dynamic}
         value, {acc, dynamic} -> {[value | acc], dynamic}
       end)
 
@@ -263,20 +300,62 @@ defmodule ABI.TypeDecoder do
     {value, rest}
   end
 
-  defp decode_type(:string, data), do: decode_type(:bytes, data)
-
-  defp decode_type(:bytes, data) do
-    {byte_size, rest} = decode_uint(data, 256)
-    decode_bytes(rest, byte_size, :right)
+  defp decode_type(:string, data) do
+    decode_type(:bytes, data)
   end
 
-  defp decode_type({:bytes, 0}, data), do: {<<>>, data}
-
-  defp decode_type({:bytes, size}, data) when size > 0 and size <= 32 do
-    decode_bytes(data, size, :right)
+  defp decode_type({:array, type}, data, full_data) do
+    {offset, rest_bytes} = decode_uint(data, 256)
+    <<_padding::binary-size(offset), rest_data::binary>> = full_data
+    {count, bytes} = decode_uint(rest_data, 256)
+    array_elements_bytes = 32 * count
+    <<final_bytes::binary-size(array_elements_bytes), _rest_data::binary>> = bytes
+    decode_type({:array, type, count}, final_bytes, rest_bytes)
   end
 
-  defp decode_type(els, _) do
+  defp decode_type({:array, type, size}, data, full_data) do
+    types = List.duplicate(type, size)
+    {tuple, _} = decode_type({:tuple, types}, data, full_data)
+    {Tuple.to_list(tuple), full_data}
+  end
+
+  defp decode_type({:tuple, types}, data, _) do
+    {reversed_result, _, binary} =
+      Enum.reduce(types, {[], [], data}, fn type, {acc, dynamic, binary} ->
+        if ABI.FunctionSelector.is_dynamic?(type) do
+          {val, binary} = decode_type(type, binary, data)
+          {[val | acc], [type | dynamic], binary}
+        else
+          {val, binary} = decode_type(type, binary)
+          {[val | acc], dynamic, binary}
+        end
+      end)
+
+    result_dynamic = []
+
+    {result, _} =
+      Enum.reduce(reversed_result, {[], result_dynamic}, fn
+        value, {acc, dynamic} -> {[value | acc], dynamic}
+      end)
+
+    {List.to_tuple(result), binary}
+  end
+
+  defp decode_type(:string, data, full_data) do
+    decode_type(:bytes, data, full_data)
+  end
+
+  defp decode_type(:bytes, data, full_data) do
+    {offset, rest} = decode_uint(data, 256)
+    <<_padding::binary-size(offset), rest_data::binary>> = full_data
+    {byte_size, dynamic_length_data} = decode_uint(rest_data, 256)
+    decode_bytes(dynamic_length_data, byte_size, :right, rest)
+  end
+
+  defp decode_type({:bytes, 0}, data, _),
+    do: {<<>>, data}
+
+  defp decode_type(els, _, _) do
     raise "Unsupported decoding type: #{inspect(els)}"
   end
 
