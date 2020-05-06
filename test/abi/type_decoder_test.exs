@@ -428,6 +428,98 @@ defmodule ABI.TypeDecoderTest do
 
       assert res == [{"Hello!%!", 234}]
     end
+
+    test "simple non-trivial dynamic type offset" do
+      types = [{:uint, 32}, :bytes]
+
+      data =
+        """
+        0000000000000000000000000000000000000000000000000000000000000123
+        0000000000000000000000000000000000000000000000000000000000000040
+        000000000000000000000000000000000000000000000000000000000000000d
+        48656c6c6f2c20776f726c642100000000000000000000000000000000000000
+        """
+        |> encode_multiline_string()
+
+      assert [0x123, "Hello, world!"] == TypeDecoder.decode(data, types)
+      assert data == data |> TypeDecoder.decode(types) |> TypeEncoder.encode(types)
+    end
+  end
+
+  describe "with examples from solidity docs" do
+    # https://solidity.readthedocs.io/en/v0.5.13/abi-spec.html
+
+    test "baz example" do
+      types = [{:uint, 32}, :bool]
+
+      data =
+        """
+        0000000000000000000000000000000000000000000000000000000000000045
+        0000000000000000000000000000000000000000000000000000000000000001
+        """
+        |> encode_multiline_string()
+
+      assert [69, true] == TypeDecoder.decode(data, types)
+      assert data == data |> TypeDecoder.decode(types) |> TypeEncoder.encode(types)
+    end
+
+    test "bar example" do
+      types = [{:array, {:bytes, 3}, 2}]
+
+      data =
+        """
+        6162630000000000000000000000000000000000000000000000000000000000
+        6465660000000000000000000000000000000000000000000000000000000000
+        """
+        |> encode_multiline_string()
+
+      assert [["abc", "def"]] == TypeDecoder.decode(data, types)
+      assert data == data |> TypeDecoder.decode(types) |> TypeEncoder.encode(types)
+    end
+
+    test "sam example" do
+      types = [:bytes, :bool, {:array, {:uint, 32}}]
+
+      data =
+        """
+        0000000000000000000000000000000000000000000000000000000000000060
+        0000000000000000000000000000000000000000000000000000000000000001
+        00000000000000000000000000000000000000000000000000000000000000a0
+        0000000000000000000000000000000000000000000000000000000000000004
+        6461766500000000000000000000000000000000000000000000000000000000
+        0000000000000000000000000000000000000000000000000000000000000003
+        0000000000000000000000000000000000000000000000000000000000000001
+        0000000000000000000000000000000000000000000000000000000000000002
+        0000000000000000000000000000000000000000000000000000000000000003
+        """
+        |> encode_multiline_string()
+
+      assert ["dave", true, [1, 2, 3]] == TypeDecoder.decode(data, types)
+      assert data == data |> TypeDecoder.decode(types) |> TypeEncoder.encode(types)
+    end
+
+    test "use of dynamic types example" do
+      types = [{:uint, 32}, {:array, {:uint, 32}}, {:bytes, 10}, :bytes]
+
+      data =
+        """
+        0000000000000000000000000000000000000000000000000000000000000123
+        0000000000000000000000000000000000000000000000000000000000000080
+        3132333435363738393000000000000000000000000000000000000000000000
+        00000000000000000000000000000000000000000000000000000000000000e0
+        0000000000000000000000000000000000000000000000000000000000000002
+        0000000000000000000000000000000000000000000000000000000000000456
+        0000000000000000000000000000000000000000000000000000000000000789
+        000000000000000000000000000000000000000000000000000000000000000d
+        48656c6c6f2c20776f726c642100000000000000000000000000000000000000
+        """
+        |> encode_multiline_string()
+
+      assert [0x123, [0x456, 0x789], "1234567890", "Hello, world!"] ==
+               TypeDecoder.decode(data, types)
+
+      assert data == data |> TypeDecoder.decode(types) |> TypeEncoder.encode(types)
+    end
   end
 
   defp encode_multiline_string(data) do
