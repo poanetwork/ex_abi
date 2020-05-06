@@ -117,7 +117,7 @@ defmodule ABI.TypeEncoder do
   end
 
   def encode(data, %ABI.FunctionSelector{types: types} = function_selector) do
-      initial_offset = 0
+    initial_offset = 0
 
     {result, _, dynamic_data, []} =
       encode_type({:tuple, types}, initial_offset, <<>>, [List.to_tuple(data)])
@@ -176,7 +176,6 @@ defmodule ABI.TypeEncoder do
   end
 
   defp do_encode([type | remaining_types], offset, dynamic_data, data, acc) do
-
     {encoded, offset, dynamic_data, remaining_data} =
       encode_type(type, offset, dynamic_data, data)
 
@@ -285,7 +284,6 @@ defmodule ABI.TypeEncoder do
 
   defp encode_type({:array, type, element_count}, input_offset, dynamic_data, [data | rest]) do
     repeated_type = List.duplicate(type, element_count)
-    
 
     if ABI.FunctionSelector.is_dynamic?(type) do
       encode_type(
