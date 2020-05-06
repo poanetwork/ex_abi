@@ -1,3 +1,5 @@
+* ABI parsing tuple type (https://github.com/poanetwork/ex_abi/pull/29)
+* ABI encoding array type fix (https://github.com/poanetwork/ex_abi/pull/28)
 * Elixir version bump: 1.10.2 (https://github.com/poanetwork/ex_abi/pull/27)
 # 0.3.0
 * Fix encoding/decoding of dynamic size types (https://github.com/poanetwork/ex_abi/pull/24)
