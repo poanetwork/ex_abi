@@ -113,6 +113,47 @@ defmodule ABI.TypeEncoderTest do
       assert Base.encode16(ABI.encode(function_selector, data), case: :lower) ==
                Base.encode16(encoded_pattern, case: :lower)
     end
+
+    test "encodes [string, bool]" do
+      data_to_encode = [{"awesome", true}]
+
+      selector = %ABI.FunctionSelector{
+        types: [{:tuple, [:string, :bool]}]
+      }
+
+      encoded_pattern =
+        """
+        0000000000000000000000000000000000000000000000000000000000000040
+        0000000000000000000000000000000000000000000000000000000000000001
+        0000000000000000000000000000000000000000000000000000000000000007
+        617765736f6d6500000000000000000000000000000000000000000000000000
+        """
+        |> encode_multiline_string()
+
+      assert Base.encode16(ABI.TypeEncoder.encode(data_to_encode, selector), case: :lower) ==
+               Base.encode16(encoded_pattern, case: :lower)
+    end
+
+    test "" do
+      data_to_encode = [[1], [2]]
+
+      selector = "test(uint[], uint[])"
+
+      encoded_pattern =
+        """
+        f0d7f6eb
+        0000000000000000000000000000000000000000000000000000000000000040
+        0000000000000000000000000000000000000000000000000000000000000080
+        0000000000000000000000000000000000000000000000000000000000000001
+        0000000000000000000000000000000000000000000000000000000000000001
+        0000000000000000000000000000000000000000000000000000000000000001
+        0000000000000000000000000000000000000000000000000000000000000002
+        """
+        |> encode_multiline_string()
+
+      assert Base.encode16(ABI.encode(selector, data_to_encode), case: :lower) ==
+               Base.encode16(encoded_pattern, case: :lower)
+    end
   end
 
   defp encode_multiline_string(data) do

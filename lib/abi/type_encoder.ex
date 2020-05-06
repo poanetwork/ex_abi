@@ -117,7 +117,7 @@ defmodule ABI.TypeEncoder do
   end
 
   def encode(data, %ABI.FunctionSelector{types: types} = function_selector) do
-    initial_offset = Enum.count(types)
+      initial_offset = 0
 
     {result, _, dynamic_data, []} =
       encode_type({:tuple, types}, initial_offset, <<>>, [List.to_tuple(data)])
@@ -142,7 +142,12 @@ defmodule ABI.TypeEncoder do
       "000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000007617765736f6d6500000000000000000000000000000000000000000000000000"
   """
   def encode_raw(data, types) do
-    initial_offset = Enum.count(types)
+    initial_offset =
+      if Enum.count(types) > 1 do
+        Enum.count(types)
+      else
+        0
+      end
 
     do_encode(types, initial_offset, <<>>, data, [])
   end
@@ -171,6 +176,7 @@ defmodule ABI.TypeEncoder do
   end
 
   defp do_encode([type | remaining_types], offset, dynamic_data, data, acc) do
+
     {encoded, offset, dynamic_data, remaining_data} =
       encode_type(type, offset, dynamic_data, data)
 
@@ -202,9 +208,9 @@ defmodule ABI.TypeEncoder do
     {value, offset, dynamic_data, rest}
   end
 
-  defp encode_type(:string, offset, dynamic_data, [data | rest]) do
+  defp encode_type(:string, input_offset, dynamic_data, [data | rest]) do
     # length + value todo: value can spread to more than 32 bytes
-    new_offset = offset + 1 + 1
+    new_offset = input_offset + 1 + 1
 
     dynamic_data =
       if dynamic_data == <<>> do
@@ -213,14 +219,15 @@ defmodule ABI.TypeEncoder do
         dynamic_data <> encode_uint(byte_size(data), 256) <> encode_bytes(data)
       end
 
-    current_offset = encode_uint(offset * 32, 256)
+    input_offset = if input_offset == 0, do: 1, else: input_offset
+    current_offset = encode_uint(input_offset * 32, 256)
 
     {current_offset, new_offset, dynamic_data, rest}
   end
 
-  defp encode_type(:bytes, offset, dynamic_data, [data | rest]) do
+  defp encode_type(:bytes, input_offset, dynamic_data, [data | rest]) do
     # length + value todo: value can spread to more than 32 bytes
-    new_offset = offset + 1 + 1
+    new_offset = input_offset + 1 + 1
 
     dynamic_data =
       if dynamic_data == <<>> do
@@ -229,7 +236,8 @@ defmodule ABI.TypeEncoder do
         dynamic_data <> encode_uint(byte_size(data), 256) <> encode_bytes(data)
       end
 
-    current_offset = encode_uint(offset * 32, 256)
+    input_offset = if input_offset == 0, do: 1, else: input_offset
+    current_offset = encode_uint(input_offset * 32, 256)
 
     {current_offset, new_offset, dynamic_data, rest}
   end
@@ -252,7 +260,7 @@ defmodule ABI.TypeEncoder do
     # `count(types)` of them, so the tail starts at `32 * count(types)`.
     tail_start = (types |> Enum.count()) * 32
 
-    initial_offset = offset - 1 + Enum.count(types)
+    initial_offset = offset + Enum.count(types)
 
     {head, tail, [], _, new_offset, new_dynamic_data} =
       Enum.reduce(
@@ -265,21 +273,46 @@ defmodule ABI.TypeEncoder do
         end
       )
 
-    new_offset = new_offset + Enum.count(types)
-
     {head <> tail, new_offset, new_dynamic_data, rest}
   end
 
-  defp encode_type({:array, type, element_count}, offset, dynamic_data, [data | rest]) do
-    repeated_type = List.duplicate(type, element_count)
-    encode_type({:tuple, repeated_type}, offset, dynamic_data, [data |> List.to_tuple() | rest])
+  defp encode_type({:tuple, types}, offset, dynamic_data, [data | rest], encoded_prefix) do
+    {encoded, new_offset, new_dynamic_data, rest} =
+      encode_type({:tuple, types}, offset, dynamic_data, [data | rest])
+
+    {encoded_prefix <> encoded, new_offset, new_dynamic_data, rest}
   end
 
-  defp encode_type({:array, type}, offset, dynamic_data, [data | _rest] = all_data) do
+  defp encode_type({:array, type, element_count}, input_offset, dynamic_data, [data | rest]) do
+    repeated_type = List.duplicate(type, element_count)
+    
+
+    if ABI.FunctionSelector.is_dynamic?(type) do
+      encode_type(
+        {:tuple, repeated_type},
+        input_offset,
+        dynamic_data,
+        [data |> List.to_tuple() | rest],
+        encode_uint(32, 256)
+      )
+    else
+      encode_type(
+        {:tuple, repeated_type},
+        input_offset,
+        dynamic_data,
+        [data |> List.to_tuple() | rest]
+      )
+    end
+  end
+
+  defp encode_type({:array, type}, input_offset, dynamic_data, [data | _rest] = all_data) do
     element_count = Enum.count(data)
 
+    # we should add the length of array to offset
+    offset_with_length = input_offset + 1
+
     {encoded_array, new_offset, dynamic_data, rest} =
-      encode_type({:array, type, element_count}, offset, dynamic_data, all_data)
+      encode_type({:array, type, element_count}, offset_with_length, dynamic_data, all_data)
 
     encoded_uint = encode_uint(element_count, 256)
 
@@ -290,7 +323,9 @@ defmodule ABI.TypeEncoder do
         dynamic_data <> encoded_uint <> encoded_array
       end
 
-    {encode_uint(offset * 32, 256), new_offset, dynamic_data, rest}
+    input_offset = if input_offset == 0, do: 1, else: input_offset
+
+    {encode_uint(input_offset * 32, 256), new_offset, dynamic_data, rest}
   end
 
   defp encode_type(els, a, b, c) do
