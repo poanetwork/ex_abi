@@ -316,25 +316,27 @@ defmodule ABI.TypeDecoder do
     <<_padding::binary-size(offset), rest_data::binary>> = full_data
     {count, bytes} = decode_uint(rest_data, 256)
 
-    decode_type({:array, type, count}, bytes, rest_bytes)
+    types = List.duplicate(type, count)
+    {tuple, _} = decode_type({:tuple, types}, bytes, rest_bytes)
+    {Tuple.to_list(tuple), rest_bytes}
   end
 
   defp decode_type({:array, type, size}, data, full_data) do
-    # data =
-    #   if ABI.FunctionSelector.is_dynamic?(type) do
-    #     <<_offset::signed-256, rest::binary>> = data
-    #     rest
-    #   else
-    #     data
-    #   end
+    data =
+      if ABI.FunctionSelector.is_dynamic?(type) do
+        <<_offset::signed-256, rest::binary>> = data
+        rest
+      else
+        data
+      end
 
-    # full_data =
-    #   if ABI.FunctionSelector.is_dynamic?(type) do
-    #     <<_offset::signed-256, rest::binary>> = full_data
-    #     rest
-    #   else
-    #     full_data
-    #   end
+    full_data =
+      if ABI.FunctionSelector.is_dynamic?(type) do
+        <<_offset::signed-256, rest::binary>> = full_data
+        rest
+      else
+        full_data
+      end
 
     types = List.duplicate(type, size)
     {tuple, _} = decode_type({:tuple, types}, data, full_data)
