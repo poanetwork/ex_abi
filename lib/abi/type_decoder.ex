@@ -246,15 +246,6 @@ defmodule ABI.TypeDecoder do
     decode_int(data, size_in_bits)
   end
 
-  defp decode_type({:array, type}, data) do
-    {offset, rest_bytes} = decode_uint(data, 256)
-    <<_padding::binary-size(offset), rest_data::binary>> = data
-    {count, bytes} = decode_uint(rest_data, 256)
-    array_elements_bytes = 32 * count
-    <<final_bytes::binary-size(array_elements_bytes), _rest_data::binary>> = bytes
-    decode_type({:array, type, count}, final_bytes, rest_bytes)
-  end
-
   defp decode_type({:bytes, size}, data) when size > 0 and size <= 32 do
     decode_bytes(data, size, :right, data, data)
   end
@@ -264,11 +255,6 @@ defmodule ABI.TypeDecoder do
     {tuple, bytes} = decode_type({:tuple, types}, data)
 
     {Tuple.to_list(tuple), bytes}
-  end
-
-  defp decode_type(:bytes, data) do
-    {byte_size, bytes} = decode_uint(data, 256)
-    decode_bytes(bytes, byte_size, :right, <<>>)
   end
 
   defp decode_type({:tuple, types}, data) do
