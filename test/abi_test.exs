@@ -134,7 +134,7 @@ defmodule ABITest do
     end
   end
 
-  describe "decode/2" do
+  describe "find_and_decode/2" do
     test "finds and decode the correct function" do
       function_specs = [
         %ABI.FunctionSelector{
