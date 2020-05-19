@@ -1,0 +1,116 @@
+[
+    {
+      "constant": true,
+      "inputs": [
+        {"internalType": "uint160", "name": "exitId", "type": "uint160"}
+      ],
+      "name": "inFlightExits",
+      "outputs": [
+        {
+          "components": [
+            {"internalType": "bool", "name": "isCanonical", "type": "bool"},
+            {
+              "internalType": "uint64",
+              "name": "exitStartTimestamp",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "exitMap",
+              "type": "uint256" 
+            },
+            {
+              "internalType": "uint256",
+              "name": "position",
+              "type": "uint256"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "bytes32",
+                  "name": "outputId",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "address payable",
+                  "name": "exitTarget",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "token",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "amount",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "piggybackBondSize",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct PaymentExitDataModel.WithdrawData[4]",
+              "name": "inputs",
+              "type": "tuple[4]"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "bytes32",
+                  "name": "outputId",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "address payable",
+                  "name": "exitTarget",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "token",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "amount",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "piggybackBondSize",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct PaymentExitDataModel.WithdrawData[4]",
+              "name": "outputs",
+              "type": "tuple[4]"
+            },
+            {
+              "internalType": "address payable",
+              "name": "bondOwner",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "bondSize",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "oldestCompetitorPosition",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct PaymentExitDataModel.InFlightExit",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]

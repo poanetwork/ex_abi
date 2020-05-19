@@ -10,7 +10,7 @@ by adding `ex_abi` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:ex_abi, "~> 0.2.0"}
+    {:ex_abi, "~> 0.3.0"}
   ]
 end
 ```
@@ -27,7 +27,9 @@ To encode a function call, pass the ABI spec and the data to pass in to `ABI.enc
 
 ```elixir
 iex> ABI.encode("baz(uint,address)", [50, <<1::160>> |> :binary.decode_unsigned])
-<<162, 145, 173, 214, 0, 0, 0, 0, 0, 0, 0, 0, ...>
+<<162, 145, 173, 214, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, ...>>
 ```
 
 Then, you can construct an Ethereum transaction with that data, e.g.
@@ -47,8 +49,8 @@ That transaction can then be sent via JSON-RPC or DevP2P to execute the given fu
 Decode is generally the opposite of encoding, though we generally leave off the function signature from the start of the data. E.g. from above:
 
 ```elixir
-iex> ABI.decode("baz(uint,address)", "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000320000000000000000000000000000000000000000000000000000000000000001" |> Base.decode16!(case: :lower))
-[50, <<1::160>> |> :binary.decode_unsigned]
+iex> ABI.decode("baz(uint,address)", "00000000000000000000000000000000000000000000000000000000000000320000000000000000000000000000000000000000000000000000000000000001" |> Base.decode16!(case: :lower))
+[50, <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1>>]
 ```
 
 ## Support

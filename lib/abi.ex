@@ -33,6 +33,10 @@ defmodule ABI do
       ...> |> Base.encode16(case: :lower)
       "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b457468657220546f6b656e000000000000000000000000000000000000000000"
 
+      iex> ABI.encode("test(uint[], uint[])", [[1], [2]])
+      ...> |> Base.encode16(case: :lower)
+      "f0d7f6eb000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002"
+
       iex> File.read!("priv/dog.abi.json")
       ...> |> Jason.decode!
       ...> |> ABI.parse_specification
@@ -155,7 +159,7 @@ defmodule ABI do
       ...>   "type" => "constructor"
       ...> }]
       ...> |> ABI.parse_specification
-      []
+      [%ABI.FunctionSelector{function: nil, input_names: ["_numProposals"], inputs_indexed: nil, method_id: <<99, 53, 230, 34>>, returns: [], type: :constructor, types: [uint: 8]}]
 
       iex> [%{
       ...>   "payable" => false,
@@ -170,6 +174,10 @@ defmodule ABI do
       ...> |> ABI.parse_specification(include_events?: true)
       ...> |> Enum.filter(&(&1.type == :event))
       [%ABI.FunctionSelector{type: :event, function: "WantsPets", input_names: ["_from_human", "_number", "_belly"], inputs_indexed: [true, false, true], method_id: <<235, 155, 60, 76>>, types: [:string, {:uint, 256}, :bool]}]
+        
+      iex> File.read!("priv/example1.abi.json")
+      ...> |> Jason.decode!
+      ...> |> ABI.parse_specification(include_events?: true)
   """
   def parse_specification(doc, opts \\ []) do
     if opts[:include_events?] do

@@ -67,4 +67,33 @@ defmodule ABI.FunctionSelectorTest do
       assert parse_specification_type(type) == expected
     end
   end
+
+  describe "parse_specification_item/1" do
+    test "parses constructor" do
+      abi = %{
+        "type" => "constructor",
+        "inputs" => [
+          %{"type" => "address", "name" => "_golemFactory"},
+          %{"type" => "address", "name" => "_migrationMaster"},
+          %{"type" => "uint256", "name" => "_fundingStartBlock"},
+          %{"type" => "uint256", "name" => "_fundingEndBlock"}
+        ]
+      }
+
+      assert parse_specification_item(abi) == %ABI.FunctionSelector{
+               function: nil,
+               input_names: [
+                 "_golemFactory",
+                 "_migrationMaster",
+                 "_fundingStartBlock",
+                 "_fundingEndBlock"
+               ],
+               inputs_indexed: nil,
+               method_id: <<145, 100, 21, 225>>,
+               returns: [],
+               type: :constructor,
+               types: [:address, :address, {:uint, 256}, {:uint, 256}]
+             }
+    end
+  end
 end
