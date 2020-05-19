@@ -272,7 +272,6 @@ defmodule ABI.TypeDecoderTest do
 
       encoded_result = TypeEncoder.encode(result, types)
       assert encoded_result == encoded_pattern
-
       assert result == encoded_result |> TypeDecoder.decode(types)
     end
 

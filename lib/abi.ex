@@ -174,7 +174,7 @@ defmodule ABI do
       ...> |> ABI.parse_specification(include_events?: true)
       ...> |> Enum.filter(&(&1.type == :event))
       [%ABI.FunctionSelector{type: :event, function: "WantsPets", input_names: ["_from_human", "_number", "_belly"], inputs_indexed: [true, false, true], method_id: <<235, 155, 60, 76>>, types: [:string, {:uint, 256}, :bool]}]
-        
+
       iex> File.read!("priv/example1.abi.json")
       ...> |> Jason.decode!
       ...> |> ABI.parse_specification(include_events?: true)

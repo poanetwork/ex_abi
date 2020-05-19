@@ -164,11 +164,29 @@ defmodule ABI.TypeDecoder do
       [{"awesome", true}]
   """
   def decode_raw(binary_data, types) do
-    {result, _} = do_decode_raw(binary_data, types)
+    {result, _} = do_decode_raw(binary_data, types, true)
     result
   end
 
-  def do_decode_raw(binary_data, types) do
+  def do_decode_raw(binary_data, full_type, prefix_dynamic_tuple \\ false)
+
+  def do_decode_raw(binary_data, full_type = [type = {:tuple, _}], true) do
+    prefixed_tuple_data =
+      if ABI.FunctionSelector.is_dynamic?(type) do
+        <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 32>> <> binary_data
+      else
+        binary_data
+      end
+
+    do_decode_raw(prefixed_tuple_data, full_type, false)
+  end
+
+  def do_decode_raw(binary_data, full_type, true) do
+    do_decode_raw(binary_data, full_type, false)
+  end
+
+  def do_decode_raw(binary_data, types, false) do
     {reversed_result, binary_rest} =
       Enum.reduce(types, {[], binary_data}, fn type, {acc, binary} ->
         {value, rest} =
@@ -316,7 +334,7 @@ defmodule ABI.TypeDecoder do
     {offset, rest_bytes} = decode_uint(data, 256)
     <<_padding::binary-size(offset), tuple_data::binary>> = full_data
 
-    {reversed_result, _, binary} =
+    {reversed_result, _, _binary} =
       Enum.reduce(types, {[], [], tuple_data}, fn type, {acc, dynamic, binary} ->
         if ABI.FunctionSelector.is_dynamic?(type) do
           {val, binary} = decode_type(type, binary, tuple_data)
@@ -356,7 +374,7 @@ defmodule ABI.TypeDecoder do
   end
 
   @spec decode_uint(binary(), integer()) :: {integer(), binary()}
-  defp decode_uint(data, size_in_bits) do
+  def decode_uint(data, size_in_bits) do
     # TODO: Create `left_pad` repo, err, add to `ExthCrypto.Math`
     total_bit_size = size_in_bits + ExthCrypto.Math.mod(256 - size_in_bits, 256)
     <<value::integer-size(total_bit_size), rest::binary>> = data
