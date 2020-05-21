@@ -26,17 +26,6 @@ defmodule ABI.TypeEncoder do
       ...> |> Base.encode16(case: :lower)
       "000000000000000000000000000000000000000000000000000000000000001100000000000000000000000000000000000000000000000000000000000000012040000000000000000000000000000000000000000000000000000000000000"
 
-      iex> [[17, 1]]
-      ...> |> ABI.TypeEncoder.encode(
-      ...>      %ABI.FunctionSelector{
-      ...>        function: "baz",
-      ...>        types: [
-      ...>          {:array, {:uint, 32}, 2}
-      ...>        ]
-      ...>      }
-      ...>    )
-      ...> |> Base.encode16(case: :lower)
-      "3d0ec53300000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
 
       iex> [[17, 1], true]
       ...> |> ABI.TypeEncoder.encode(
@@ -74,12 +63,17 @@ defmodule ABI.TypeEncoder do
 
   def do_encode(params, types, static_acc \\ [], dynamic_acc \\ [])
 
+  # def do_encode([], [], static, dynamic) do
+  #   {normalized_static, normalized_dynamic} = normalize_accs(static, dynamic)
+  # end
+
   def do_encode([], [], [{static, dynamic}], []) do
     do_encode([], [], static, dynamic)
   end
 
   def do_encode([], [], static_acc, []) do
     static_acc
+    |> List.flatten()
     |> Enum.reverse()
     |> Enum.reduce(<<>>, fn part, acc ->
       acc <> part
@@ -94,9 +88,15 @@ defmodule ABI.TypeEncoder do
     encode_uint(32, 256) <> do_encode([], [], static_part, dynamic_part)
   end
 
+  def do_encode([], [], [:dynamic | nested_static], [nested_dynamic])
+      when is_list(nested_dynamic) and is_list(nested_static) do
+    encode_uint(32, 256) <> do_encode([], [], nested_static, nested_dynamic)
+  end
+
   def do_encode([], [], reversed_static_acc, reversed_dynamic_acc) do
-    static_acc = Enum.reverse(reversed_static_acc)
-    dynamic_acc = Enum.reverse(reversed_dynamic_acc)
+    static_acc = reversed_static_acc |> List.flatten() |> Enum.reverse()
+
+    dynamic_acc = reversed_dynamic_acc |> List.flatten() |> Enum.reverse()
 
     static_part_size =
       Enum.reduce(static_acc, 0, fn value, acc ->
@@ -190,31 +190,48 @@ defmodule ABI.TypeEncoder do
   defp do_encode_type({:array, type}, data, static_acc, dynamic_acc) do
     param_count = Enum.count(data)
 
-    do_encode_type({:array, type, param_count}, data, static_acc, dynamic_acc)
+    encoded_size = encode_uint(param_count, 256)
+
+    types = List.duplicate(type, param_count)
+
+    {static, dynamic} = do_encode_tuple(types, data, static_acc, dynamic_acc)
+
+    dynamic_acc_with_size = [encoded_size | dynamic_acc]
+
+    if ABI.FunctionSelector.is_dynamic?(type) do
+      {[:dynamic | static_acc], [dynamic | dynamic_acc_with_size]}
+    else
+      {[:dynamic | static_acc], [static | dynamic_acc_with_size]}
+    end
   end
 
   defp do_encode_type({:array, type, size}, data, static_acc, dynamic_acc) do
     types = List.duplicate(type, size)
-
-    new_part = do_encode_tuple(types, data, static_acc, dynamic_acc)
+    {static, dynamic} = do_encode_tuple(types, data, static_acc, dynamic_acc)
 
     if ABI.FunctionSelector.is_dynamic?(type) do
-      {[:dynamic | static_acc], [new_part | dynamic_acc]}
+      {[:dynamic | static_acc], [dynamic | dynamic_acc]}
     else
-      {[new_part | static_acc], dynamic_acc}
+      {[static | static_acc], dynamic_acc}
     end
+  end
+
+  defp do_encode_type(:address, data, static_acc, dynamic_acc) do
+    do_encode_type({:uint, 160}, data, static_acc, dynamic_acc)
   end
 
   defp do_encode_type(type = {:tuple, types}, tuple_parameters, static_acc, dynamic_acc)
        when is_tuple(tuple_parameters) do
     list_parameters = Tuple.to_list(tuple_parameters)
 
-    new_part = do_encode_tuple(types, list_parameters, static_acc, dynamic_acc)
+    {static, dynamic} = do_encode_tuple(types, list_parameters, static_acc, dynamic_acc)
 
     if ABI.FunctionSelector.is_dynamic?(type) do
-      {[:dynamic | static_acc], [new_part | dynamic_acc]}
+      new_static = [static | static_acc]
+
+      {[:dynamic | new_static], [dynamic | dynamic_acc]}
     else
-      {[new_part | static_acc], dynamic_acc}
+      {[static | static_acc], [dynamic | dynamic_acc]}
     end
   end
 
