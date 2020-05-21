@@ -3,115 +3,6 @@ defmodule ABI.TypeEncoderTest do
 
   # doctest ABI.TypeEncoder
 
-  # describe "encode/2 '{:int, size}' type" do
-  #   test "successfully encodes positive and negative values" do
-  #     data_to_encode = [42, -42]
-
-  #     selector = %ABI.FunctionSelector{
-  #       function: "baz",
-  #       types: [
-  #         {:int, 8},
-  #         {:int, 16}
-  #       ],
-  #       returns: :bool
-  #     }
-
-  #     encrypted_fn_name = "64ea0ab7"
-  #     # 42
-  #     positive_int = "000000000000000000000000000000000000000000000000000000000000002a"
-  #     # -42
-  #     negative_int = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd6"
-
-  #     expected_result =
-  #       Base.decode16!(encrypted_fn_name <> positive_int <> negative_int, case: :lower)
-
-  #     assert ABI.TypeEncoder.encode(data_to_encode, selector) == expected_result
-  #   end
-
-  #   test "raises when there is signed integer overflow" do
-  #     # an 8 bit signed integer must be between -127 and 127
-  #     data_to_encode = [128]
-
-  #     selector = %ABI.FunctionSelector{
-  #       function: "baz",
-  #       types: [
-  #         {:int, 8}
-  #       ],
-  #       returns: :bool
-  #     }
-
-  #     assert_raise RuntimeError, fn ->
-  #       ABI.TypeEncoder.encode(data_to_encode, selector)
-  #     end
-  #   end
-  # end
-
-  #   test "encode bytes" do
-  #     data = [<<1, 35, 69, 103, 137>>]
-
-  #     function_selector = %ABI.FunctionSelector{
-  #       function: nil,
-  #       types: [:bytes]
-  #     }
-
-  #     encoded_pattern =
-  #       """
-  #       0000000000000000000000000000000000000000000000000000000000000020
-  #       0000000000000000000000000000000000000000000000000000000000000005
-  #       0123456789000000000000000000000000000000000000000000000000000000
-  #       """
-  #       |> encode_multiline_string()
-
-  #     assert Base.encode16(ABI.TypeEncoder.encode(data, function_selector), case: :lower) ==
-  #              Base.encode16(encoded_pattern, case: :lower)
-
-  #     data = [<<1, 35, 69, 103, 137>>]
-
-  #     function_selector = %ABI.FunctionSelector{
-  #       function: "returnBytes1",
-  #       input_names: ["arr"],
-  #       inputs_indexed: nil,
-  #       method_id: <<223, 65, 143, 191>>,
-  #       returns: [:bytes],
-  #       type: :function,
-  #       types: [:bytes]
-  #     }
-
-  #     encoded_pattern =
-  #       """
-  #       df418fbf
-  #       0000000000000000000000000000000000000000000000000000000000000020
-  #       0000000000000000000000000000000000000000000000000000000000000005
-  #       0123456789000000000000000000000000000000000000000000000000000000
-  #       """
-  #       |> encode_multiline_string()
-
-  #     assert Base.encode16(ABI.encode(function_selector, data), case: :lower) ==
-  #              Base.encode16(encoded_pattern, case: :lower)
-  #   end
-
-  #   test "encodes [string, bool]" do
-  #     data_to_encode = [{"awesome", true}]
-
-  #     selector = %ABI.FunctionSelector{
-  #       types: [{:tuple, [:string, :bool]}]
-  #     }
-
-  #     encoded_pattern =
-  #       """
-  #       0000000000000000000000000000000000000000000000000000000000000040
-  #       0000000000000000000000000000000000000000000000000000000000000001
-  #       0000000000000000000000000000000000000000000000000000000000000007
-  #       617765736f6d6500000000000000000000000000000000000000000000000000
-  #       """
-  #       |> encode_multiline_string()
-
-  #     assert Base.encode16(ABI.TypeEncoder.encode(data_to_encode, selector), case: :lower) ==
-  #              Base.encode16(encoded_pattern, case: :lower)
-  #   end
-
-  # end
-
   describe "encode/2" do
     test "encodes [{:uint, 32}, :bool]" do
       result =
@@ -263,6 +154,7 @@ defmodule ABI.TypeEncoderTest do
     test "encodes [[1], [2]]" do
       data_to_encode = [[1], [2]]
       selector = "test(uint[], uint[])"
+      result = ABI.encode(selector, data_to_encode) |> IO.inspect(limit: :infinity)
 
       encoded_pattern =
         """
@@ -275,9 +167,131 @@ defmodule ABI.TypeEncoderTest do
         0000000000000000000000000000000000000000000000000000000000000002
         """
         |> encode_multiline_string()
+        |> IO.inspect(limit: :infinity)
 
-      assert Base.encode16(ABI.encode(selector, data_to_encode), case: :lower) ==
+      assert Base.encode16(result, case: :lower) ==
                Base.encode16(encoded_pattern, case: :lower)
+    end
+
+    test "encode bytes" do
+      data = [<<1, 35, 69, 103, 137>>]
+
+      function_selector = %ABI.FunctionSelector{
+        function: nil,
+        types: [:bytes]
+      }
+
+      encoded_pattern =
+        """
+        0000000000000000000000000000000000000000000000000000000000000020
+        0000000000000000000000000000000000000000000000000000000000000005
+        0123456789000000000000000000000000000000000000000000000000000000
+        """
+        |> encode_multiline_string()
+
+      assert Base.encode16(ABI.TypeEncoder.encode(data, function_selector), case: :lower) ==
+               Base.encode16(encoded_pattern, case: :lower)
+
+      data = [<<1, 35, 69, 103, 137>>]
+
+      function_selector = %ABI.FunctionSelector{
+        function: "returnBytes1",
+        input_names: ["arr"],
+        inputs_indexed: nil,
+        method_id: <<223, 65, 143, 191>>,
+        returns: [:bytes],
+        type: :function,
+        types: [:bytes]
+      }
+
+      encoded_pattern =
+        """
+        df418fbf
+        0000000000000000000000000000000000000000000000000000000000000020
+        0000000000000000000000000000000000000000000000000000000000000005
+        0123456789000000000000000000000000000000000000000000000000000000
+        """
+        |> encode_multiline_string()
+
+      assert Base.encode16(ABI.encode(function_selector, data), case: :lower) ==
+               Base.encode16(encoded_pattern, case: :lower)
+    end
+
+    test "raises when there is signed integer overflow" do
+      # an 8 bit signed integer must be between -127 and 127
+      data_to_encode = [128]
+
+      selector = %ABI.FunctionSelector{
+        function: "baz",
+        types: [
+          {:int, 8}
+        ],
+        returns: :bool
+      }
+
+      assert_raise RuntimeError, fn ->
+        ABI.TypeEncoder.encode(data_to_encode, selector)
+      end
+    end
+
+    test "successfully encodes positive and negative values" do
+      data_to_encode = [42, -42]
+
+      selector = %ABI.FunctionSelector{
+        function: "baz",
+        types: [
+          {:int, 8},
+          {:int, 16}
+        ],
+        returns: :bool
+      }
+
+      encrypted_fn_name = "64ea0ab7"
+      # 42
+      positive_int = "000000000000000000000000000000000000000000000000000000000000002a"
+      # -42
+      negative_int = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd6"
+
+      expected_result =
+        Base.decode16!(encrypted_fn_name <> positive_int <> negative_int, case: :lower)
+
+      assert ABI.TypeEncoder.encode(data_to_encode, selector) == expected_result
+    end
+
+    test "encodes {:tuple, [{:uint, 32}, :bool, {:bytes, 2}]}" do
+      params =
+        [{17, true, <<32, 64>>}]
+        |> ABI.TypeEncoder.encode(%ABI.FunctionSelector{
+          function: nil,
+          types: [
+            {:tuple, [{:uint, 32}, :bool, {:bytes, 2}]}
+          ]
+        })
+        |> Base.encode16(case: :lower)
+
+      expected_result =
+        "00000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000022040000000000000000000000000000000000000000000000000000000000000"
+
+      assert params == expected_result
+    end
+
+    test "encodes dynamic array " do
+      result =
+        [[17, 1], true]
+        |> ABI.TypeEncoder.encode(%ABI.FunctionSelector{
+          function: nil,
+          types: [
+            {:array, {:uint, 32}},
+            :bool
+          ]
+        })
+        |> IO.inspect(limit: :infinity)
+        |> Base.encode16(case: :lower)
+
+      expected_result =
+        "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
+
+      assert result == expected_result
     end
   end
 

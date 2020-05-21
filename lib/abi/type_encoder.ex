@@ -14,31 +14,9 @@ defmodule ABI.TypeEncoder do
 
 
 
-      iex> [{17, true, <<32, 64>>}]
-      ...> |> ABI.TypeEncoder.encode(
-      ...>      %ABI.FunctionSelector{
-      ...>        function: nil,
-      ...>        types: [
-      ...>          {:tuple, [{:uint, 32}, :bool, {:bytes, 2}]}
-      ...>        ]
-      ...>      }
-      ...>    )
-      ...> |> Base.encode16(case: :lower)
-      "000000000000000000000000000000000000000000000000000000000000001100000000000000000000000000000000000000000000000000000000000000012040000000000000000000000000000000000000000000000000000000000000"
 
 
-      iex> [[17, 1], true]
-      ...> |> ABI.TypeEncoder.encode(
-      ...>      %ABI.FunctionSelector{
-      ...>        function: nil,
-      ...>        types: [
-      ...>          {:array, {:uint, 32}, 2},
-      ...>          :bool
-      ...>        ]
-      ...>      }
-      ...>    )
-      ...> |> Base.encode16(case: :lower)
-      "000000000000000000000000000000000000000000000000000000000000001100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001"
+
 
       iex> [[17, 1]]
       ...> |> ABI.TypeEncoder.encode(
@@ -58,6 +36,7 @@ defmodule ABI.TypeEncoder do
   end
 
   def encode(data, %ABI.FunctionSelector{types: types} = function_selector) do
+    IO.inspect(types)
     encode_method_id(function_selector) <> do_encode(data, types)
   end
 
@@ -94,9 +73,9 @@ defmodule ABI.TypeEncoder do
   end
 
   def do_encode([], [], reversed_static_acc, reversed_dynamic_acc) do
-    static_acc = reversed_static_acc |> List.flatten() |> Enum.reverse()
+    static_acc = reversed_static_acc |> IO.inspect() |> List.flatten() |> Enum.reverse()
 
-    dynamic_acc = reversed_dynamic_acc |> List.flatten() |> Enum.reverse()
+    dynamic_acc = reversed_dynamic_acc |> IO.inspect() |> List.flatten() |> Enum.reverse()
 
     static_part_size =
       Enum.reduce(static_acc, 0, fn value, acc ->
@@ -188,13 +167,14 @@ defmodule ABI.TypeEncoder do
   end
 
   defp do_encode_type({:array, type}, data, static_acc, dynamic_acc) do
+    IO.inspect({static_acc, dynamic_acc})
     param_count = Enum.count(data)
 
     encoded_size = encode_uint(param_count, 256)
 
     types = List.duplicate(type, param_count)
 
-    {static, dynamic} = do_encode_tuple(types, data, static_acc, dynamic_acc)
+    {static, dynamic} = do_encode_tuple(types, data, [], [])
 
     dynamic_acc_with_size = [encoded_size | dynamic_acc]
 
