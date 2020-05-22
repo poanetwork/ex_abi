@@ -143,9 +143,7 @@ defmodule ABI.TypeEncoder do
 
   defp do_encode_type({:bytes, size}, parameter, static_part, dynamic_part)
        when is_binary(parameter) and byte_size(parameter) <= size do
-    IO.inspect("hre")
     value = encode_uint(byte_size(parameter), 256) <> encode_bytes(parameter)
-    IO.inspect(value)
     dynamic_part_byte_size = byte_size(value)
 
     {[{:dynamic, dynamic_part_byte_size} | static_part], [value | dynamic_part]}
@@ -184,15 +182,14 @@ defmodule ABI.TypeEncoder do
   end
 
   defp do_encode_type({:array, type, size}, data, static_acc, dynamic_acc) do
-    types = List.duplicate(type, size) |> IO.inspect()
-    {static, dynamic} = do_encode_tuple(types, data, static_acc, dynamic_acc) |> IO.inspect()
+    types = List.duplicate(type, size)
+    {static, dynamic} = do_encode_tuple(types, data, static_acc, dynamic_acc)
 
     if ABI.FunctionSelector.is_dynamic?(type) do
       data_bytes_size =
         Enum.reduce(dynamic, 0, fn value, acc ->
           byte_size(value) + acc
         end)
-        |> IO.inspect()
 
       {[{:dynamic, data_bytes_size} | [static | static_acc]], [dynamic | dynamic_acc]}
     else
