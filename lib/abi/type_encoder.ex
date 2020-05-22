@@ -194,10 +194,7 @@ defmodule ABI.TypeEncoder do
     {static, dynamic} = do_encode_tuple(types, data, static_acc, dynamic_acc)
 
     if ABI.FunctionSelector.is_dynamic?(type) do
-      data_bytes_size =
-        Enum.reduce(dynamic, 0, fn value, acc ->
-          byte_size(value) + acc
-        end)
+      data_bytes_size = calculate_size(dynamic)
 
       {[{:dynamic, data_bytes_size} | [static | static_acc]], [dynamic | dynamic_acc]}
     else
@@ -216,10 +213,7 @@ defmodule ABI.TypeEncoder do
     {static, dynamic} = do_encode_tuple(types, list_parameters, static_acc, dynamic_acc)
 
     if ABI.FunctionSelector.is_dynamic?(type) do
-      data_bytes_size =
-        Enum.reduce(dynamic, 0, fn value, acc ->
-          byte_size(value) + acc
-        end)
+      data_bytes_size = calculate_size(dynamic)
 
       new_static = [static | static_acc]
 
@@ -227,6 +221,27 @@ defmodule ABI.TypeEncoder do
     else
       {[static | static_acc], [dynamic | dynamic_acc]}
     end
+  end
+
+  defp calculate_size(values, acc \\ 0)
+  defp calculate_size([], acc), do: acc
+
+  defp calculate_size([current | remaining], acc) when is_list(current) do
+    current_size = acc + calculate_size(current)
+
+    calculate_size(remaining, current_size)
+  end
+
+  defp calculate_size([current | remaining], acc) do
+    current_size = byte_size(current) + acc
+
+    calculate_size(remaining, current_size)
+  end
+
+  defp calculate_size([{:dynamic, _} | remaining], acc) do
+    current_size = 32 + acc
+
+    calculate_size(remaining, current_size)
   end
 
   defp do_encode_tuple(
