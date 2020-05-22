@@ -21,6 +21,10 @@ defmodule ABI.TypeEncoder do
     do_encode(data, types)
   end
 
+  def encode_raw(data, types) do
+    do_encode(data, types)
+  end
+
   def do_encode(params, types, static_acc \\ [], dynamic_acc \\ [])
 
   def do_encode([], [], [{static, dynamic}], []) do
