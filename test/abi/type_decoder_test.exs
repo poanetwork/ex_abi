@@ -10,10 +10,13 @@ defmodule ABI.TypeDecoderTest do
     test "successfully decodes positives and negatives integers" do
       positive_int = "000000000000000000000000000000000000000000000000000000000000002a"
       negative_int = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd8f1"
-      result_to_decode = Base.decode16!(positive_int <> negative_int, case: :lower)
+
+      result_to_decode =
+        <<199, 158, 242, 32>> <> Base.decode16!(positive_int <> negative_int, case: :lower)
 
       selector = %ABI.FunctionSelector{
         function: "baz",
+        method_id: <<199, 158, 242, 32>>,
         types: [
           {:int, 8},
           {:int, 256}
@@ -21,7 +24,11 @@ defmodule ABI.TypeDecoderTest do
         returns: :int
       }
 
-      assert ABI.TypeDecoder.decode(result_to_decode, selector) == [42, -9999]
+      result = [42, -9999]
+      assert ABI.TypeDecoder.decode(result_to_decode, selector) == result
+
+      assert ABI.TypeEncoder.encode(result, selector) ==
+               result_to_decode
     end
   end
 
@@ -115,6 +122,7 @@ defmodule ABI.TypeDecoderTest do
         |> encode_multiline_string()
 
       assert TypeDecoder.decode(expected_encoded_result, types) == params
+      assert TypeEncoder.encode(params, types) == expected_encoded_result
     end
 
     test "with static array type" do
@@ -126,6 +134,7 @@ defmodule ABI.TypeDecoderTest do
         |> encode_multiline_string()
 
       assert TypeDecoder.decode(expected_encoded_result, types) == params
+      assert TypeEncoder.encode(params, types) == expected_encoded_result
     end
 
     test "with dynamic array in tuple" do
@@ -186,6 +195,7 @@ defmodule ABI.TypeDecoderTest do
         |> encode_multiline_string()
 
       assert TypeDecoder.decode(expected_result, types) == params
+      assert TypeEncoder.encode(params, types) == expected_result
     end
 
     test "with a fixed-length array of static data" do
@@ -200,7 +210,11 @@ defmodule ABI.TypeDecoderTest do
         """
         |> encode_multiline_string()
 
-      assert TypeDecoder.decode(data, [{:array, {:uint, 256}, 6}]) == [[7, 3, 0, 0, 0, 5]]
+      types = [{:array, {:uint, 256}, 6}]
+      result = [[7, 3, 0, 0, 0, 5]]
+
+      assert TypeDecoder.decode(data, types) == result
+      assert TypeEncoder.encode(result, types) == data
     end
 
     test "with a fixed-length array of dynamic data" do
@@ -289,9 +303,15 @@ defmodule ABI.TypeDecoderTest do
         """
         |> encode_multiline_string()
 
-      assert TypeDecoder.decode(data, [{:tuple, [{:uint, 256}, {:bytes, 10}]}]) == [
-               {0x123, "1234567890"}
-             ]
+      result = [
+        {0x123, "1234567890"}
+      ]
+
+      types = [{:tuple, [{:uint, 256}, {:bytes, 10}]}]
+
+      assert TypeDecoder.decode(data, types) == result
+
+      assert TypeEncoder.encode(result, types) == data
     end
 
     test "with dynamic tuple" do
@@ -503,17 +523,20 @@ defmodule ABI.TypeDecoderTest do
         "Cartagena"
       ]
 
-      assert TypeDecoder.decode(encoded_pattern, [
-               {:array, {:uint, 256}, 6},
-               :bool,
-               {:array, {:uint, 256}, 5},
-               {:array, :bool, 5},
-               {:uint, 256},
-               {:uint, 256},
-               {:uint, 256},
-               {:uint, 256},
-               :string
-             ]) == expected
+      types = [
+        {:array, {:uint, 256}, 6},
+        :bool,
+        {:array, {:uint, 256}, 5},
+        {:array, :bool, 5},
+        {:uint, 256},
+        {:uint, 256},
+        {:uint, 256},
+        {:uint, 256},
+        :string
+      ]
+
+      assert TypeDecoder.decode(encoded_pattern, types) == expected
+      assert TypeEncoder.encode(expected, types) == encoded_pattern
     end
 
     test "sample from Solidity docs 1" do
