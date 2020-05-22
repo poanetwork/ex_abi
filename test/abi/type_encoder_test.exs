@@ -266,13 +266,10 @@ defmodule ABI.TypeEncoderTest do
             {:tuple, [{:uint, 32}, :bool, {:bytes, 2}]}
           ]
         })
-        |> IO.inspect(limit: :infinity)
         |> Base.encode16(case: :lower)
 
       expected_result =
-        "00000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000022040000000000000000000000000000000000000000000000000000000000000"
-        |> Base.decode16!(case: :lower)
-        |> IO.inspect(limit: :infinity)
+        "000000000000000000000000000000000000000000000000000000000000001100000000000000000000000000000000000000000000000000000000000000012040000000000000000000000000000000000000000000000000000000000000"
 
       assert params == expected_result
     end
@@ -431,7 +428,19 @@ defmodule ABI.TypeEncoderTest do
        ]}
     ]
 
-    encoded = ABI.encode(signature, params) |> IO.inspect(limit: :infinity)
+    assert ABI.encode(signature, params)
+  end
+
+  test "omisge example 2" do
+    signature = "mint(address,uint256)"
+
+    params = [
+      <<116, 174, 103, 247, 241, 236, 141, 200, 208, 154, 51, 141, 206, 26, 48, 253, 33, 49, 48,
+        100>>,
+      10
+    ]
+
+    assert ABI.encode(signature, params)
   end
 
   defp encode_multiline_string(data) do
