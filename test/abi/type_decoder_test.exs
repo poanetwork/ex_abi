@@ -181,8 +181,9 @@ defmodule ABI.TypeDecoderTest do
         62617a0000000000000000000000000000000000000000000000000000000000
         """
         |> encode_multiline_string()
+        |> IO.inspect(limit: :infinity)
 
-      encoded_result = TypeEncoder.encode(result, types)
+      encoded_result = TypeEncoder.encode(result, types) |> IO.inspect(limit: :infinity)
       assert encoded_result == encoded_pattern
       assert result == encoded_result |> TypeDecoder.decode(types)
     end
@@ -270,7 +271,7 @@ defmodule ABI.TypeDecoderTest do
         """
         |> encode_multiline_string()
 
-      encoded_result = TypeEncoder.encode(result, types)
+      encoded_result = TypeEncoder.encode(result, types) |> IO.inspect(limit: :infinity)
       assert encoded_result == encoded_pattern
       assert result == encoded_result |> TypeDecoder.decode(types)
     end
