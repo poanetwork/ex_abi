@@ -36,15 +36,14 @@ defmodule ABI.TypeEncoder do
   end
 
   def encode(data, %ABI.FunctionSelector{types: types} = function_selector) do
-    IO.inspect(types)
     encode_method_id(function_selector) <> do_encode(data, types)
   end
 
-  def do_encode(params, types, static_acc \\ [], dynamic_acc \\ [])
+  def encode(data, types) do
+    do_encode(data, types)
+  end
 
-  # def do_encode([], [], static, dynamic) do
-  #   {normalized_static, normalized_dynamic} = normalize_accs(static, dynamic)
-  # end
+  def do_encode(params, types, static_acc \\ [], dynamic_acc \\ [])
 
   def do_encode([], [], [{static, dynamic}], []) do
     do_encode([], [], static, dynamic)
@@ -59,45 +58,50 @@ defmodule ABI.TypeEncoder do
     end)
   end
 
-  def do_encode([], [], [:dynamic], [dynamic_value]) when is_binary(dynamic_value) do
+  def do_encode([], [], [{:dynamic, _}], [dynamic_value]) when is_binary(dynamic_value) do
     encode_uint(32, 256) <> dynamic_value
   end
 
-  def do_encode([], [], [:dynamic], [{static_part, dynamic_part}]) do
+  def do_encode([], [], [{:dynamic, _}], [{static_part, dynamic_part}]) do
     encode_uint(32, 256) <> do_encode([], [], static_part, dynamic_part)
   end
 
-  def do_encode([], [], [:dynamic | nested_static], [nested_dynamic])
+  def do_encode([], [], [{:dynamic, _} | nested_static], [nested_dynamic])
       when is_list(nested_dynamic) and is_list(nested_static) do
     encode_uint(32, 256) <> do_encode([], [], nested_static, nested_dynamic)
   end
 
   def do_encode([], [], reversed_static_acc, reversed_dynamic_acc) do
-    static_acc = reversed_static_acc |> IO.inspect() |> List.flatten() |> Enum.reverse()
+    static_acc = reversed_static_acc |> List.flatten() |> Enum.reverse()
 
-    dynamic_acc = reversed_dynamic_acc |> IO.inspect() |> List.flatten() |> Enum.reverse()
+    dynamic_acc = reversed_dynamic_acc |> List.flatten() |> Enum.reverse()
 
     static_part_size =
       Enum.reduce(static_acc, 0, fn value, acc ->
-        if value == :dynamic do
-          acc + 32
-        else
-          acc + byte_size(value)
+        case value do
+          {:dynamic, _} -> acc + 32
+          _ -> acc + byte_size(value)
         end
       end)
 
     dynamic_indexes =
       static_acc
       |> Enum.with_index()
-      |> Enum.filter(fn {value, index} -> value == :dynamic end)
-      |> Enum.map(fn {_, index} -> index end)
-      |> Enum.zip(dynamic_acc)
+      |> Enum.filter(fn {value, _index} ->
+        case value do
+          {:dynamic, _} -> true
+          _ -> false
+        end
+      end)
+      |> Enum.map(fn {{:dynamic, byte_size}, index} -> {index, byte_size} end)
+
+    # |> Enum.zip(dynamic_acc)
 
     {complete_static_part, _} =
-      Enum.reduce(dynamic_indexes, {static_acc, static_part_size}, fn {index, value},
+      Enum.reduce(dynamic_indexes, {static_acc, static_part_size}, fn {index, byte_size},
                                                                       {acc, size_acc} ->
         new_static_acc = List.replace_at(acc, index, encode_uint(size_acc, 256))
-        new_prefix_size = byte_size(value) + size_acc
+        new_prefix_size = byte_size + size_acc
 
         {new_static_acc, new_prefix_size}
       end)
@@ -150,11 +154,19 @@ defmodule ABI.TypeEncoder do
   defp do_encode_type(:bytes, parameter, static_part, dynamic_part) do
     value = encode_uint(byte_size(parameter), 256) <> encode_bytes(parameter)
 
-    {[:dynamic | static_part], [value | dynamic_part]}
+    dynamic_part_byte_size = byte_size(value)
+
+    {[{:dynamic, dynamic_part_byte_size} | static_part], [value | dynamic_part]}
   end
 
   defp do_encode_type({:bytes, size}, parameter, static_part, dynamic_part)
        when is_binary(parameter) and byte_size(parameter) <= size do
+    IO.inspect("hre")
+    value = encode_uint(byte_size(parameter), 256) <> encode_bytes(parameter)
+    IO.inspect(value)
+    dynamic_part_byte_size = byte_size(value)
+
+    {[{:dynamic, dynamic_part_byte_size} | static_part], [value | dynamic_part]}
     do_encode_type(:bytes, parameter, static_part, dynamic_part)
   end
 
@@ -167,7 +179,6 @@ defmodule ABI.TypeEncoder do
   end
 
   defp do_encode_type({:array, type}, data, static_acc, dynamic_acc) do
-    IO.inspect({static_acc, dynamic_acc})
     param_count = Enum.count(data)
 
     encoded_size = encode_uint(param_count, 256)
@@ -178,10 +189,15 @@ defmodule ABI.TypeEncoder do
 
     dynamic_acc_with_size = [encoded_size | dynamic_acc]
 
+    data_bytes_size =
+      Enum.reduce(static ++ dynamic, 0, fn value, acc ->
+        byte_size(value) + acc
+      end)
+
     if ABI.FunctionSelector.is_dynamic?(type) do
-      {[:dynamic | static_acc], [dynamic | dynamic_acc_with_size]}
+      {[{:dynamic, data_bytes_size + 32} | static_acc], [dynamic | dynamic_acc_with_size]}
     else
-      {[:dynamic | static_acc], [static | dynamic_acc_with_size]}
+      {[{:dynamic, data_bytes_size + 32} | static_acc], [static | dynamic_acc_with_size]}
     end
   end
 
@@ -190,7 +206,12 @@ defmodule ABI.TypeEncoder do
     {static, dynamic} = do_encode_tuple(types, data, static_acc, dynamic_acc)
 
     if ABI.FunctionSelector.is_dynamic?(type) do
-      {[:dynamic | static_acc], [dynamic | dynamic_acc]}
+      data_bytes_size =
+        Enum.reduce(dynamic, 0, fn value, acc ->
+          byte_size(value) + acc
+        end)
+
+      {[{:dynamic, data_bytes_size} | static_acc], [dynamic | dynamic_acc]}
     else
       {[static | static_acc], dynamic_acc}
     end
@@ -207,9 +228,14 @@ defmodule ABI.TypeEncoder do
     {static, dynamic} = do_encode_tuple(types, list_parameters, static_acc, dynamic_acc)
 
     if ABI.FunctionSelector.is_dynamic?(type) do
+      data_bytes_size =
+        Enum.reduce(dynamic, 0, fn value, acc ->
+          byte_size(value) + acc
+        end)
+
       new_static = [static | static_acc]
 
-      {[:dynamic | new_static], [dynamic | dynamic_acc]}
+      {[{:dynamic, data_bytes_size} | new_static], [dynamic | dynamic_acc]}
     else
       {[static | static_acc], [dynamic | dynamic_acc]}
     end
@@ -238,19 +264,6 @@ defmodule ABI.TypeEncoder do
 
   defp encode_bytes(bytes) do
     pad(bytes, byte_size(bytes), :right)
-  end
-
-  defp add_prefix(static_part, dynamic_part) do
-    prefix_size = byte_size(static_part <> dynamic_part)
-
-    prefix_size_binary =
-      if prefix_size == 0 do
-        encode_uint(32, 256)
-      else
-        encode_uint(prefix_size, 256)
-      end
-
-    static_part <> prefix_size_binary
   end
 
   #   def encode(data, types) do

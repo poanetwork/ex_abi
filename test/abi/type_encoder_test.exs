@@ -154,7 +154,7 @@ defmodule ABI.TypeEncoderTest do
     test "encodes [[1], [2]]" do
       data_to_encode = [[1], [2]]
       selector = "test(uint[], uint[])"
-      result = ABI.encode(selector, data_to_encode) |> IO.inspect(limit: :infinity)
+      result = ABI.encode(selector, data_to_encode)
 
       encoded_pattern =
         """
@@ -167,7 +167,6 @@ defmodule ABI.TypeEncoderTest do
         0000000000000000000000000000000000000000000000000000000000000002
         """
         |> encode_multiline_string()
-        |> IO.inspect(limit: :infinity)
 
       assert Base.encode16(result, case: :lower) ==
                Base.encode16(encoded_pattern, case: :lower)
@@ -285,11 +284,10 @@ defmodule ABI.TypeEncoderTest do
             :bool
           ]
         })
-        |> IO.inspect(limit: :infinity)
-        |> Base.encode16(case: :lower)
 
       expected_result =
-        "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
+        "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
+        |> Base.decode16!(case: :lower)
 
       assert result == expected_result
     end
