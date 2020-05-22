@@ -134,7 +134,8 @@ defmodule ABI.TypeEncoder do
   end
 
   defp do_encode_type(:bytes, parameter, static_part, dynamic_part) do
-    value = encode_uint(byte_size(parameter), 256) <> encode_bytes(parameter)
+    binary_param = maybe_encode_unsigned(parameter)
+    value = encode_uint(byte_size(binary_param), 256) <> encode_bytes(binary_param)
 
     dynamic_part_byte_size = byte_size(value)
 
@@ -143,15 +144,19 @@ defmodule ABI.TypeEncoder do
 
   defp do_encode_type({:bytes, size}, parameter, static_part, dynamic_part)
        when is_binary(parameter) and byte_size(parameter) <= size do
-    value = encode_uint(byte_size(parameter), 256) <> encode_bytes(parameter)
-    dynamic_part_byte_size = byte_size(value)
+    value = encode_bytes(parameter)
 
-    {[{:dynamic, dynamic_part_byte_size} | static_part], [value | dynamic_part]}
-    do_encode_type(:bytes, parameter, static_part, dynamic_part)
+    {[value | static_part], dynamic_part}
   end
 
   defp do_encode_type({:bytes, size}, data, _, _) when is_binary(data) do
     raise "size mismatch for bytes#{size}: #{inspect(data)}"
+  end
+
+  defp do_encode_type({:bytes, size}, data, static_part, dynamic_part) when is_integer(data) do
+    binary_param = maybe_encode_unsigned(data)
+
+    do_encode_type({:bytes, size}, binary_param, static_part, dynamic_part)
   end
 
   defp do_encode_type({:bytes, size}, data, _, _) do
@@ -171,7 +176,10 @@ defmodule ABI.TypeEncoder do
 
     data_bytes_size =
       Enum.reduce(static ++ dynamic, 0, fn value, acc ->
-        byte_size(value) + acc
+        case value do
+          {:dynamic, _} -> acc + 32
+          _ -> byte_size(value) + acc
+        end
       end)
 
     if ABI.FunctionSelector.is_dynamic?(type) do

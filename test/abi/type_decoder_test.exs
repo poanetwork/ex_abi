@@ -181,9 +181,8 @@ defmodule ABI.TypeDecoderTest do
         62617a0000000000000000000000000000000000000000000000000000000000
         """
         |> encode_multiline_string()
-        |> IO.inspect(limit: :infinity)
 
-      encoded_result = TypeEncoder.encode(result, types) |> IO.inspect(limit: :infinity)
+      encoded_result = TypeEncoder.encode(result, types)
       assert encoded_result == encoded_pattern
       assert result == encoded_result |> TypeDecoder.decode(types)
     end
@@ -271,7 +270,7 @@ defmodule ABI.TypeDecoderTest do
         """
         |> encode_multiline_string()
 
-      encoded_result = TypeEncoder.encode(result, types) |> IO.inspect(limit: :infinity)
+      encoded_result = TypeEncoder.encode(result, types)
       assert encoded_result == encoded_pattern
       assert result == encoded_result |> TypeDecoder.decode(types)
     end
@@ -592,7 +591,6 @@ defmodule ABI.TypeDecoderTest do
         48656c6c6f2c20776f726c642100000000000000000000000000000000000000
         """
         |> encode_multiline_string()
-        |> IO.inspect(limit: :infinity)
 
       assert [0x123, [0x456, 0x789], "1234567890", "Hello, world!"] ==
                TypeDecoder.decode(data, types)
@@ -601,7 +599,6 @@ defmodule ABI.TypeDecoderTest do
                data
                |> TypeDecoder.decode(types)
                |> TypeEncoder.encode(types)
-               |> IO.inspect(limit: :infinity)
     end
 
     test "use of dynamic types example1" do
@@ -631,7 +628,6 @@ defmodule ABI.TypeDecoderTest do
                data
                |> TypeDecoder.decode(types)
                |> TypeEncoder.encode(types)
-               |> IO.inspect(limit: :infinity)
     end
   end
 

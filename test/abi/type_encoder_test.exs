@@ -293,6 +293,32 @@ defmodule ABI.TypeEncoderTest do
     end
   end
 
+  test "example 1 from web3-eth-abi js" do
+    types = [:bytes]
+    params = [0xDF3234]
+
+    result = ABI.TypeEncoder.encode(params, types)
+
+    expected_result =
+      "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000003df32340000000000000000000000000000000000000000000000000000000000"
+      |> Base.decode16!(case: :lower)
+
+    assert expected_result == result
+  end
+
+  test "example 2 from web3-eth-abi js" do
+    types = [{:array, {:bytes, 32}}]
+    params = [[0xDF3234, 0xFDFD]]
+
+    expected_result =
+      "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002df32340000000000000000000000000000000000000000000000000000000000fdfd000000000000000000000000000000000000000000000000000000000000"
+      |> Base.decode16!(case: :lower)
+
+    result = ABI.TypeEncoder.encode(params, types)
+
+    assert expected_result == result
+  end
+
   defp encode_multiline_string(data) do
     data
     |> String.split("\n", trim: true)
