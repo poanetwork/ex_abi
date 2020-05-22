@@ -170,29 +170,26 @@ defmodule ABI.TypeEncoder do
 
     types = List.duplicate(type, param_count)
 
-    {static, dynamic} = do_encode_tuple(types, data, [], [])
+    result = do_encode(data, types)
 
     dynamic_acc_with_size = [encoded_size | dynamic_acc]
 
-    data_bytes_size = calculate_size(static ++ dynamic)
+    # number of elements count + data size
+    data_bytes_size = byte_size(result) + 32
 
-    if ABI.FunctionSelector.is_dynamic?(type) do
-      {[{:dynamic, data_bytes_size + 32} | static_acc], [dynamic | dynamic_acc_with_size]}
-    else
-      {[{:dynamic, data_bytes_size + 32} | static_acc], [static | dynamic_acc_with_size]}
-    end
+    {[{:dynamic, data_bytes_size} | static_acc], [result | dynamic_acc_with_size]}
   end
 
   defp do_encode_type({:array, type, size}, data, static_acc, dynamic_acc) do
     types = List.duplicate(type, size)
-    {static, dynamic} = do_encode_tuple(types, data, [], [])
+    result = do_encode(data, types)
 
     if ABI.FunctionSelector.is_dynamic?(type) do
-      data_bytes_size = calculate_size(dynamic)
+      data_bytes_size = byte_size(result)
 
-      {[{:dynamic, data_bytes_size} | [static | static_acc]], [dynamic | dynamic_acc]}
+      {[{:dynamic, data_bytes_size} | static_acc], [result | dynamic_acc]}
     else
-      {[static | static_acc], dynamic_acc}
+      {[result | static_acc], dynamic_acc}
     end
   end
 
@@ -204,63 +201,15 @@ defmodule ABI.TypeEncoder do
        when is_tuple(tuple_parameters) do
     list_parameters = Tuple.to_list(tuple_parameters)
 
-    {static, dynamic} = do_encode_tuple(types, list_parameters, [], [])
+    result = do_encode(list_parameters, types)
 
     if ABI.FunctionSelector.is_dynamic?(type) do
-      data_bytes_size = calculate_size(dynamic)
+      data_bytes_size = byte_size(result)
 
-      new_static = [static | static_acc]
-
-      {[{:dynamic, data_bytes_size} | new_static], [dynamic | dynamic_acc]}
+      {[{:dynamic, data_bytes_size} | static_acc], [result | dynamic_acc]}
     else
-      {[static | static_acc], [dynamic | dynamic_acc]}
+      {[result | static_acc], dynamic_acc}
     end
-  end
-
-  defp calculate_size(values, acc \\ 0)
-  defp calculate_size([], acc), do: acc
-
-  defp calculate_size([current | remaining], acc) when is_list(current) do
-    current_size = acc + calculate_size(current)
-
-    calculate_size(remaining, current_size)
-  end
-
-  defp calculate_size([{:dynamic, _} | remaining], acc) do
-    current_size = 32 + acc
-
-    calculate_size(remaining, current_size)
-  end
-
-  defp calculate_size({:dynamic, _}, acc) do
-    32 + acc
-  end
-
-  defp calculate_size([current | remaining], acc) do
-    current_size = byte_size(current) + acc
-
-    calculate_size(remaining, current_size)
-  end
-
-  defp do_encode_tuple(
-         [],
-         [],
-         static_acc,
-         dynamic_acc
-       ) do
-    {static_acc, dynamic_acc}
-  end
-
-  defp do_encode_tuple(
-         [type | remaining_types],
-         [current_parameter | remaining_parameters],
-         static_acc,
-         dynamic_acc
-       ) do
-    {new_static_acc, new_dynamic_acc} =
-      do_encode_type(type, current_parameter, static_acc, dynamic_acc)
-
-    do_encode_tuple(remaining_types, remaining_parameters, new_static_acc, new_dynamic_acc)
   end
 
   defp encode_bytes(bytes) do

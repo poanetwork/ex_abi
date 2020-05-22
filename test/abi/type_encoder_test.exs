@@ -1,48 +1,64 @@
 defmodule ABI.TypeEncoderTest do
   use ExUnit.Case, async: true
 
-  # doctest ABI.TypeEncoder
+  doctest ABI.TypeEncoder
 
   describe "encode/2" do
     test "encodes [{:uint, 32}, :bool]" do
+      params = [69, true]
+
+      types = [
+        {:uint, 32},
+        :bool
+      ]
+
+      selector = %ABI.FunctionSelector{
+        function: "baz",
+        method_id: <<205, 205, 119, 192>>,
+        types: types,
+        returns: :bool
+      }
+
       result =
-        [69, true]
-        |> ABI.TypeEncoder.encode(%ABI.FunctionSelector{
-          function: "baz",
-          types: [
-            {:uint, 32},
-            :bool
-          ],
-          returns: :bool
-        })
-        |> Base.encode16(case: :lower)
+        params
+        |> ABI.TypeEncoder.encode(selector)
 
       expected_result =
         "cdcd77c000000000000000000000000000000000000000000000000000000000000000450000000000000000000000000000000000000000000000000000000000000001"
+        |> Base.decode16!(case: :lower)
 
       assert expected_result == result
+      assert ABI.TypeDecoder.decode(expected_result, selector) == params
     end
 
     test "encodes [{:int, 25}, :bool]" do
+      selector = %ABI.FunctionSelector{
+        function: "baz",
+        method_id: <<215, 174, 202, 43>>,
+        types: [
+          {:int, 256},
+          :bool
+        ],
+        returns: :bool
+      }
+
       result =
         [-5678, true]
-        |> ABI.TypeEncoder.encode(%ABI.FunctionSelector{
-          function: "baz",
-          types: [
-            {:int, 256},
-            :bool
-          ],
-          returns: :bool
-        })
-        |> Base.encode16(case: :lower)
+        |> ABI.TypeEncoder.encode(selector)
 
       expected_result =
         "d7aeca2bffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe9d20000000000000000000000000000000000000000000000000000000000000001"
+        |> Base.decode16!(case: :lower)
 
       assert result == expected_result
+
+      assert ABI.TypeDecoder.decode(expected_result, selector) == [-5678, true]
     end
 
     test "encodes [:string]" do
+      types = [:string]
+      params = ["hello world"]
+
       result =
         ["hello world"]
         |> ABI.TypeEncoder.encode(%ABI.FunctionSelector{
@@ -51,29 +67,35 @@ defmodule ABI.TypeEncoderTest do
             :string
           ]
         })
-        |> Base.encode16(case: :lower)
 
       expected_result =
         "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b68656c6c6f20776f726c64000000000000000000000000000000000000000000"
+        |> Base.decode16!(case: :lower)
 
       assert expected_result == result
+      assert ABI.TypeDecoder.decode(expected_result, types) == params
     end
 
     test "encodes [{string, bool}]" do
+      params = [{"awesome", true}]
+
+      types = [
+        {:tuple, [:string, :bool]}
+      ]
+
       result =
-        [{"awesome", true}]
+        params
         |> ABI.TypeEncoder.encode(%ABI.FunctionSelector{
           function: nil,
-          types: [
-            {:tuple, [:string, :bool]}
-          ]
+          types: types
         })
-        |> Base.encode16(case: :lower)
 
       expected_result =
         "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000007617765736f6d6500000000000000000000000000000000000000000000000000"
+        |> Base.decode16!(case: :lower)
 
       assert expected_result == result
+      assert ABI.TypeDecoder.decode(expected_result, types) == params
     end
 
     test "encodes [17, 1]]" do
@@ -332,8 +354,23 @@ defmodule ABI.TypeEncoderTest do
     assert expected_result == result
   end
 
+  test "encodes array of array of strings" do
+    types = [{:array, {:array, :string}}]
+    params = [[["a", "a"], ["a", "a"]]]
+
+    expected_result =
+      "000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000012000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000016100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000161000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000001610000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000016100000000000000000000000000000000000000000000000000000000000000"
+      |> Base.decode16!(case: :lower)
+
+    result = ABI.TypeEncoder.encode(params, types)
+
+    assert result == expected_result
+
+    assert ABI.TypeDecoder.decode(expected_result, types) == params
+  end
+
   test "omisego example" do
-    signature = "startInFlightExit((bytes,bytes[],uint256[],bytes[],bytes[]))"
+    signature = "(bytes,bytes[],uint256[],bytes[],bytes[])"
 
     params = [
       {<<248, 150, 1, 248, 66, 160, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -428,19 +465,8 @@ defmodule ABI.TypeEncoderTest do
        ]}
     ]
 
-    assert ABI.encode(signature, params)
-  end
-
-  test "omisge example 2" do
-    signature = "mint(address,uint256)"
-
-    params = [
-      <<116, 174, 103, 247, 241, 236, 141, 200, 208, 154, 51, 141, 206, 26, 48, 253, 33, 49, 48,
-        100>>,
-      10
-    ]
-
-    assert ABI.encode(signature, params)
+    result = ABI.encode(signature, params)
+    assert ABI.decode(signature, result) == params
   end
 
   defp encode_multiline_string(data) do
