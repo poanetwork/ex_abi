@@ -469,6 +469,16 @@ defmodule ABI.TypeDecoderTest do
     #          ]) == expected
     # end
 
+    test "with dynamic array data not at the beginning of types" do
+      types = [:bool, {:array, :address}]
+      result = [true, []]
+
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
+
+      result = [true, [<<1::160>>]]
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
+    end
+
     test "with the output of an executed contract (simplified)" do
       encoded_pattern =
         """
@@ -645,35 +655,6 @@ defmodule ABI.TypeDecoderTest do
         0000000000000000000000000000000000000000000000000000000000000789
         000000000000000000000000000000000000000000000000000000000000000d
         48656c6c6f2c20776f726c642100000000000000000000000000000000000000
-        """
-        |> encode_multiline_string()
-
-      assert [0x123, [0x456, 0x789], "1234567890", "Hello, world!"] ==
-               TypeDecoder.decode(data, types)
-
-      assert data ==
-               data
-               |> TypeDecoder.decode(types)
-               |> TypeEncoder.encode(types)
-    end
-
-    test "use of dynamic types example1" do
-      types = [{:uint, 32}, {:array, {:uint, 32}}, :string, :string]
-
-      data =
-        """
-        0000000000000000000000000000000000000000000000000000000000000123
-        0000000000000000000000000000000000000000000000000000000000000080
-        00000000000000000000000000000000000000000000000000000000000000e0
-        0000000000000000000000000000000000000000000000000000000000000120
-        0000000000000000000000000000000000000000000000000000000000000002
-        0000000000000000000000000000000000000000000000000000000000000456
-        0000000000000000000000000000000000000000000000000000000000000789
-        000000000000000000000000000000000000000000000000000000000000000a
-        3132333435363738393000000000000000000000000000000000000000000000
-        000000000000000000000000000000000000000000000000000000000000000d
-        48656c6c6f2c20776f726c642100000000000000000000000000000000000000
-
         """
         |> encode_multiline_string()
 
