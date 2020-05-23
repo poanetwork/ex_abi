@@ -27,36 +27,10 @@ defmodule ABI.TypeEncoder do
 
   def do_encode(params, types, static_acc \\ [], dynamic_acc \\ [])
 
-  def do_encode([], [], [{static, dynamic}], []) do
-    do_encode([], [], static, dynamic)
-  end
-
-  def do_encode([], [], static_acc, []) do
-    static_acc
-    |> List.flatten()
-    |> Enum.reverse()
-    |> Enum.reduce(<<>>, fn part, acc ->
-      acc <> part
-    end)
-  end
-
-  def do_encode([], [], [{:dynamic, _}], [dynamic_value]) when is_binary(dynamic_value) do
-    encode_uint(32, 256) <> dynamic_value
-  end
-
-  def do_encode([], [], [{:dynamic, _}], [{static_part, dynamic_part}]) do
-    encode_uint(32, 256) <> do_encode([], [], static_part, dynamic_part)
-  end
-
-  def do_encode([], [], [{:dynamic, _} | nested_static], [nested_dynamic])
-      when is_list(nested_dynamic) and is_list(nested_static) do
-    encode_uint(32, 256) <> do_encode([], [], nested_static, nested_dynamic)
-  end
-
   def do_encode([], [], reversed_static_acc, reversed_dynamic_acc) do
-    static_acc = reversed_static_acc |> List.flatten() |> Enum.reverse()
+    static_acc = reversed_static_acc |> Enum.reverse()
 
-    dynamic_acc = reversed_dynamic_acc |> List.flatten() |> Enum.reverse()
+    dynamic_acc = reversed_dynamic_acc |> Enum.reverse()
 
     static_part_size =
       Enum.reduce(static_acc, 0, fn value, acc ->
@@ -76,8 +50,6 @@ defmodule ABI.TypeEncoder do
         end
       end)
       |> Enum.map(fn {{:dynamic, byte_size}, index} -> {index, byte_size} end)
-
-    # |> Enum.zip(dynamic_acc)
 
     {complete_static_part, _} =
       Enum.reduce(dynamic_indexes, {static_acc, static_part_size}, fn {index, byte_size},
