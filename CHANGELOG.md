@@ -1,5 +1,7 @@
+# 0.4.0
+* Fix encoding and decoding of dynamic types (https://github.com/poanetwork/ex_abi/pull/34)
 # 0.3.2
-* fix array/tuple decoding (https://github.com/poanetwork/ex_abi/pull/32)
+* Fix array/tuple decoding (https://github.com/poanetwork/ex_abi/pull/32)
 # 0.3.1
 * ABI parsing tuple type (https://github.com/poanetwork/ex_abi/pull/29)
 * ABI encoding array type fix (https://github.com/poanetwork/ex_abi/pull/28)
