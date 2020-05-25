@@ -29,7 +29,7 @@ defmodule ABI.TypeEncoder do
     do_encode(data, types)
   end
 
-  def encode_raw(data, types, _) when is_list(types) do
+  def encode_raw(data, types) when is_list(types) do
     do_encode(data, types)
   end
 
