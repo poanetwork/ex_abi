@@ -136,19 +136,24 @@ defmodule ABI.TypeDecoder do
         ]
       }]
   """
+  def decode(encoded_data, selector_or_types, data_type \\ :input)
 
-  def decode(encoded_data, %FunctionSelector{types: types, method_id: method_id})
+  def decode(encoded_data, %FunctionSelector{types: types, method_id: method_id}, :input)
       when is_binary(method_id) do
     {:ok, ^method_id, rest} = ABI.Util.split_method_id(encoded_data)
 
     decode_raw(rest, types)
   end
 
-  def decode(encoded_data, %FunctionSelector{types: types}) do
+  def decode(encoded_data, %FunctionSelector{types: types}, :input) do
     decode(encoded_data, types)
   end
 
-  def decode(encoded_data, types) do
+  def decode(encoded_data, %FunctionSelector{returns: types}, :output) do
+    decode(encoded_data, types)
+  end
+
+  def decode(encoded_data, types, _) when is_list(types) do
     decode_raw(encoded_data, types)
   end
 
@@ -171,7 +176,7 @@ defmodule ABI.TypeDecoder do
     {reversed_result, binary_rest} =
       Enum.reduce(types, {[], binary_data}, fn type, {acc, binary} ->
         {value, rest} =
-          if ABI.FunctionSelector.is_dynamic?(type) do
+          if FunctionSelector.is_dynamic?(type) do
             decode_type(type, binary, binary_data)
           else
             decode_type(type, binary)
@@ -228,7 +233,7 @@ defmodule ABI.TypeDecoder do
     {value, rest}
   end
 
-  @spec decode_type(ABI.FunctionSelector.type(), binary(), binary()) ::
+  @spec decode_type(FunctionSelector.type(), binary(), binary()) ::
           {any(), binary(), binary()}
   defp decode_type({:uint, size_in_bits}, data) do
     decode_uint(data, size_in_bits)
@@ -252,7 +257,7 @@ defmodule ABI.TypeDecoder do
   defp decode_type({:tuple, types}, data) do
     {reversed_result, _, binary} =
       Enum.reduce(types, {[], [], data}, fn type, {acc, dynamic, binary} ->
-        if ABI.FunctionSelector.is_dynamic?(type) do
+        if FunctionSelector.is_dynamic?(type) do
           {val, binary} = decode_type(type, binary, data)
           {[val | acc], [type | dynamic], binary}
         else
@@ -317,7 +322,7 @@ defmodule ABI.TypeDecoder do
 
     {reversed_result, _, _binary} =
       Enum.reduce(types, {[], [], tuple_data}, fn type, {acc, dynamic, binary} ->
-        if ABI.FunctionSelector.is_dynamic?(type) do
+        if FunctionSelector.is_dynamic?(type) do
           {val, binary} = decode_type(type, binary, tuple_data)
           {[val | acc], [type | dynamic], binary}
         else

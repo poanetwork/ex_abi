@@ -1,6 +1,8 @@
 defmodule ABI.TypeEncoderTest do
   use ExUnit.Case, async: true
 
+  alias ABI.{TypeDecoder, TypeEncoder, FunctionSelector}
+
   doctest ABI.TypeEncoder
 
   describe "encode/2" do
@@ -12,7 +14,7 @@ defmodule ABI.TypeEncoderTest do
         :bool
       ]
 
-      selector = %ABI.FunctionSelector{
+      selector = %FunctionSelector{
         function: "baz",
         method_id: <<205, 205, 119, 192>>,
         types: types,
@@ -21,18 +23,18 @@ defmodule ABI.TypeEncoderTest do
 
       result =
         params
-        |> ABI.TypeEncoder.encode(selector)
+        |> TypeEncoder.encode(selector)
 
       expected_result =
         "cdcd77c000000000000000000000000000000000000000000000000000000000000000450000000000000000000000000000000000000000000000000000000000000001"
         |> Base.decode16!(case: :lower)
 
       assert expected_result == result
-      assert ABI.TypeDecoder.decode(expected_result, selector) == params
+      assert TypeDecoder.decode(expected_result, selector) == params
     end
 
     test "encodes [{:int, 25}, :bool]" do
-      selector = %ABI.FunctionSelector{
+      selector = %FunctionSelector{
         function: "baz",
         method_id: <<215, 174, 202, 43>>,
         types: [
@@ -44,7 +46,7 @@ defmodule ABI.TypeEncoderTest do
 
       result =
         [-5678, true]
-        |> ABI.TypeEncoder.encode(selector)
+        |> TypeEncoder.encode(selector)
 
       expected_result =
         "d7aeca2bffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe9d20000000000000000000000000000000000000000000000000000000000000001"
@@ -52,7 +54,7 @@ defmodule ABI.TypeEncoderTest do
 
       assert result == expected_result
 
-      assert ABI.TypeDecoder.decode(expected_result, selector) == [-5678, true]
+      assert TypeDecoder.decode(expected_result, selector) == [-5678, true]
     end
 
     test "encodes [:string]" do
@@ -61,7 +63,7 @@ defmodule ABI.TypeEncoderTest do
 
       result =
         ["hello world"]
-        |> ABI.TypeEncoder.encode(%ABI.FunctionSelector{
+        |> TypeEncoder.encode(%FunctionSelector{
           function: nil,
           types: [
             :string
@@ -73,7 +75,7 @@ defmodule ABI.TypeEncoderTest do
         |> Base.decode16!(case: :lower)
 
       assert expected_result == result
-      assert ABI.TypeDecoder.decode(expected_result, types) == params
+      assert TypeDecoder.decode(expected_result, types) == params
     end
 
     test "encodes [{string, bool}]" do
@@ -85,7 +87,7 @@ defmodule ABI.TypeEncoderTest do
 
       result =
         params
-        |> ABI.TypeEncoder.encode(%ABI.FunctionSelector{
+        |> TypeEncoder.encode(%FunctionSelector{
           function: nil,
           types: types
         })
@@ -95,11 +97,11 @@ defmodule ABI.TypeEncoderTest do
         |> Base.decode16!(case: :lower)
 
       assert expected_result == result
-      assert ABI.TypeDecoder.decode(expected_result, types) == params
+      assert TypeDecoder.decode(expected_result, types) == params
     end
 
     test "encodes [17, 1]]" do
-      selector = %ABI.FunctionSelector{
+      selector = %FunctionSelector{
         function: "baz",
         method_id: <<61, 14, 197, 51>>,
         types: [
@@ -111,20 +113,20 @@ defmodule ABI.TypeEncoderTest do
 
       result =
         params
-        |> ABI.TypeEncoder.encode(selector)
+        |> TypeEncoder.encode(selector)
 
       expected_result =
         "3d0ec53300000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
         |> Base.decode16!(case: :lower)
 
       assert result == expected_result
-      assert ABI.TypeDecoder.decode(expected_result, selector) == params
+      assert TypeDecoder.decode(expected_result, selector) == params
     end
 
     test "encodes [[17, 1], true]" do
       params = [[17, 1], true]
 
-      selector = %ABI.FunctionSelector{
+      selector = %FunctionSelector{
         function: nil,
         types: [
           {:array, {:uint, 32}, 2},
@@ -155,7 +157,7 @@ defmodule ABI.TypeEncoderTest do
         ]
       ]
 
-      selector = %ABI.FunctionSelector{
+      selector = %FunctionSelector{
         function: nil,
         types: [
           {:array, :address}
@@ -177,7 +179,7 @@ defmodule ABI.TypeEncoderTest do
     test "encodes [string, bool]" do
       data_to_encode = [{"awesome", true}]
 
-      selector = %ABI.FunctionSelector{
+      selector = %FunctionSelector{
         types: [{:tuple, [:string, :bool]}]
       }
 
@@ -218,7 +220,7 @@ defmodule ABI.TypeEncoderTest do
     test "encode bytes example 1" do
       data = [<<1, 35, 69, 103, 137>>]
 
-      function_selector = %ABI.FunctionSelector{
+      function_selector = %FunctionSelector{
         function: nil,
         types: [:bytes]
       }
@@ -238,7 +240,7 @@ defmodule ABI.TypeEncoderTest do
     test "encode bytes example 2" do
       data = [<<1, 35, 69, 103, 137>>]
 
-      function_selector = %ABI.FunctionSelector{
+      function_selector = %FunctionSelector{
         function: "returnBytes1",
         input_names: ["arr"],
         inputs_indexed: nil,
@@ -265,7 +267,7 @@ defmodule ABI.TypeEncoderTest do
       # an 8 bit signed integer must be between -127 and 127
       data_to_encode = [128]
 
-      selector = %ABI.FunctionSelector{
+      selector = %FunctionSelector{
         function: "baz",
         types: [
           {:int, 8}
@@ -281,7 +283,7 @@ defmodule ABI.TypeEncoderTest do
     test "successfully encodes positive and negative values" do
       data_to_encode = [42, -42]
 
-      selector = %ABI.FunctionSelector{
+      selector = %FunctionSelector{
         function: "baz",
         method_id: <<100, 234, 10, 183>>,
         types: [
@@ -307,7 +309,7 @@ defmodule ABI.TypeEncoderTest do
     test "encodes {:tuple, [{:uint, 32}, :bool, {:bytes, 2}]}" do
       params =
         [{17, true, <<32, 64>>}]
-        |> ABI.TypeEncoder.encode(%ABI.FunctionSelector{
+        |> ABI.TypeEncoder.encode(%FunctionSelector{
           function: nil,
           types: [
             {:tuple, [{:uint, 32}, :bool, {:bytes, 2}]}
@@ -324,7 +326,7 @@ defmodule ABI.TypeEncoderTest do
     test "encodes dynamic array" do
       params = [[17, 1], true]
 
-      selector = %ABI.FunctionSelector{
+      selector = %FunctionSelector{
         function: nil,
         types: [
           {:array, {:uint, 32}},
@@ -334,7 +336,7 @@ defmodule ABI.TypeEncoderTest do
 
       result =
         params
-        |> ABI.TypeEncoder.encode(selector)
+        |> TypeEncoder.encode(selector)
 
       expected_result =
         "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
@@ -351,7 +353,7 @@ defmodule ABI.TypeEncoderTest do
     types = [:bytes]
     params = [value]
 
-    result = ABI.TypeEncoder.encode(params, types)
+    result = TypeEncoder.encode(params, types)
 
     expected_result =
       "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000003df32340000000000000000000000000000000000000000000000000000000000"
@@ -372,7 +374,7 @@ defmodule ABI.TypeEncoderTest do
       "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002df32340000000000000000000000000000000000000000000000000000000000fdfd000000000000000000000000000000000000000000000000000000000000"
       |> Base.decode16!(case: :lower)
 
-    result = ABI.TypeEncoder.encode(params, types)
+    result = TypeEncoder.encode(params, types)
 
     assert expected_result == result
 
@@ -394,7 +396,7 @@ defmodule ABI.TypeEncoderTest do
       "00000000000000000000000000000000000000000000000000000000000000ff0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000568656c6c6f000000000000000000000000000000000000000000000000000000"
       |> Base.decode16!(case: :lower)
 
-    result = ABI.TypeEncoder.encode(params, types)
+    result = TypeEncoder.encode(params, types)
 
     assert expected_result == result
 
@@ -409,11 +411,11 @@ defmodule ABI.TypeEncoderTest do
       "000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000012000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000016100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000161000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000001610000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000016100000000000000000000000000000000000000000000000000000000000000"
       |> Base.decode16!(case: :lower)
 
-    result = ABI.TypeEncoder.encode(params, types)
+    result = TypeEncoder.encode(params, types)
 
     assert result == expected_result
 
-    assert ABI.TypeDecoder.decode(expected_result, types) == params
+    assert TypeDecoder.decode(expected_result, types) == params
   end
 
   test "omisego example" do

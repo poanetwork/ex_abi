@@ -5,32 +5,39 @@ defmodule ABI.TypeEncoder do
   array of data and encode that array according to the specification.
   """
 
+  alias ABI.FunctionSelector
+
   @doc """
   Encodes the given data based on the function selector.
   """
 
-  def encode(data, %ABI.FunctionSelector{function: nil, types: types}) do
+  def encode(data, selector_or_types, data_type \\ :input)
+
+  def encode(data, %FunctionSelector{function: nil, types: types}, :input) do
     do_encode(data, types)
   end
 
-  def encode(data, %ABI.FunctionSelector{types: types} = function_selector) do
+  def encode(data, %FunctionSelector{types: types} = function_selector, :input) do
     encode_method_id(function_selector) <> do_encode(data, types)
   end
 
-  def encode(data, types) do
+  def encode(data, %FunctionSelector{returns: types}, :output) do
     do_encode(data, types)
   end
 
-  def encode_raw(data, types) do
+  def encode(data, types, _) when is_list(types) do
     do_encode(data, types)
   end
 
-  def do_encode(params, types, static_acc \\ [], dynamic_acc \\ [])
+  def encode_raw(data, types, _) when is_list(types) do
+    do_encode(data, types)
+  end
 
-  def do_encode([], [], reversed_static_acc, reversed_dynamic_acc) do
-    static_acc = reversed_static_acc |> Enum.reverse()
+  defp do_encode(params, types, static_acc \\ [], dynamic_acc \\ [])
 
-    dynamic_acc = reversed_dynamic_acc |> Enum.reverse()
+  defp do_encode([], [], reversed_static_acc, reversed_dynamic_acc) do
+    static_acc = Enum.reverse(reversed_static_acc)
+    dynamic_acc = Enum.reverse(reversed_dynamic_acc)
 
     static_part_size =
       Enum.reduce(static_acc, 0, fn value, acc ->
@@ -66,12 +73,12 @@ defmodule ABI.TypeEncoder do
     end)
   end
 
-  def do_encode(
-        [current_parameter | remaining_parameters],
-        [current_type | remaining_types],
-        static_acc,
-        dynamic_acc
-      ) do
+  defp do_encode(
+         [current_parameter | remaining_parameters],
+         [current_type | remaining_types],
+         static_acc,
+         dynamic_acc
+       ) do
     {new_static_acc, new_dynamic_acc} =
       do_encode_type(current_type, current_parameter, static_acc, dynamic_acc)
 
@@ -156,7 +163,7 @@ defmodule ABI.TypeEncoder do
     types = List.duplicate(type, size)
     result = do_encode(data, types)
 
-    if ABI.FunctionSelector.is_dynamic?(type) do
+    if FunctionSelector.is_dynamic?(type) do
       data_bytes_size = byte_size(result)
 
       {[{:dynamic, data_bytes_size} | static_acc], [result | dynamic_acc]}
@@ -175,7 +182,7 @@ defmodule ABI.TypeEncoder do
 
     result = do_encode(list_parameters, types)
 
-    if ABI.FunctionSelector.is_dynamic?(type) do
+    if FunctionSelector.is_dynamic?(type) do
       data_bytes_size = byte_size(result)
 
       {[{:dynamic, data_bytes_size} | static_acc], [result | dynamic_acc]}
@@ -188,14 +195,14 @@ defmodule ABI.TypeEncoder do
     pad(bytes, byte_size(bytes), :right)
   end
 
-  @spec encode_method_id(%ABI.FunctionSelector{}) :: binary()
-  defp encode_method_id(%ABI.FunctionSelector{function: nil}), do: ""
+  @spec encode_method_id(%FunctionSelector{}) :: binary()
+  defp encode_method_id(%FunctionSelector{function: nil}), do: ""
 
   defp encode_method_id(function_selector) do
     # Encode selector e.g. "baz(uint32,bool)" and take keccak
     kec =
       function_selector
-      |> ABI.FunctionSelector.encode()
+      |> FunctionSelector.encode()
       |> ExthCrypto.Hash.Keccak.kec()
 
     # Take first four bytes
