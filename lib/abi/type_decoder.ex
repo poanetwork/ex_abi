@@ -141,15 +141,7 @@ defmodule ABI.TypeDecoder do
       when is_binary(method_id) do
     {:ok, ^method_id, rest} = ABI.Util.split_method_id(encoded_data)
 
-    types =
-      if types[:tuple] do
-        types[:tuple]
-      else
-        types
-      end
-
-    [result] = decode_raw(rest, [{:tuple, types}])
-    Tuple.to_list(result)
+    decode_raw(rest, types)
   end
 
   def decode(encoded_data, %FunctionSelector{types: types}) do
@@ -303,23 +295,30 @@ defmodule ABI.TypeDecoder do
     {count, bytes} = decode_uint(rest_data, 256)
 
     types = List.duplicate(type, count)
-    {tuple, _} = decode_type({:tuple, types}, bytes, rest_bytes)
+
+    {tuple, _bytes} = decode_type({:tuple, types}, bytes)
     {Tuple.to_list(tuple), rest_bytes}
   end
 
   defp decode_type({:array, type, size}, data, full_data) do
-    <<_offset::signed-256, data_without_prefix::binary>> = data
+    {offset, rest_bytes} = decode_uint(data, 256)
+    <<_padding::binary-size(offset), rest_data::binary>> = full_data
 
     types = List.duplicate(type, size)
-    {tuple, _} = decode_type({:tuple, types}, data_without_prefix, full_data)
-    {Tuple.to_list(tuple), full_data}
+
+    {tuple, _} = decode_type({:tuple, types}, rest_data)
+
+    {Tuple.to_list(tuple), rest_bytes}
   end
 
-  defp decode_type({:tuple, types}, data, _) do
-    {reversed_result, _, binary} =
-      Enum.reduce(types, {[], [], data}, fn type, {acc, dynamic, binary} ->
+  defp decode_type({:tuple, types}, data, full_data) do
+    {offset, rest_bytes} = decode_uint(data, 256)
+    <<_padding::binary-size(offset), tuple_data::binary>> = full_data
+
+    {reversed_result, _, _binary} =
+      Enum.reduce(types, {[], [], tuple_data}, fn type, {acc, dynamic, binary} ->
         if ABI.FunctionSelector.is_dynamic?(type) do
-          {val, binary} = decode_type(type, binary, data)
+          {val, binary} = decode_type(type, binary, tuple_data)
           {[val | acc], [type | dynamic], binary}
         else
           {val, binary} = decode_type(type, binary)
@@ -334,7 +333,7 @@ defmodule ABI.TypeDecoder do
         value, {acc, dynamic} -> {[value | acc], dynamic}
       end)
 
-    {List.to_tuple(result), binary}
+    {List.to_tuple(result), rest_bytes}
   end
 
   defp decode_type(:string, data, full_data) do
@@ -356,7 +355,7 @@ defmodule ABI.TypeDecoder do
   end
 
   @spec decode_uint(binary(), integer()) :: {integer(), binary()}
-  defp decode_uint(data, size_in_bits) do
+  def decode_uint(data, size_in_bits) do
     # TODO: Create `left_pad` repo, err, add to `ExthCrypto.Math`
     total_bit_size = size_in_bits + ExthCrypto.Math.mod(256 - size_in_bits, 256)
     <<value::integer-size(total_bit_size), rest::binary>> = data
