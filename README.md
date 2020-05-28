@@ -32,17 +32,8 @@ iex> ABI.encode("baz(uint,address)", [50, <<1::160>> |> :binary.decode_unsigned]
   0, ...>>
 ```
 
-Then, you can construct an Ethereum transaction with that data, e.g.
+That transaction can then be sent via JSON-RPC Client [ethereumex](https://github.com/mana-ethereum/ethereumex).
 
-```elixir
-# Blockchain comes from `Exthereum.Blockchain`, see below.
-iex> %Blockchain.Transaction{
-...> # ...
-...> data: <<162, 145, 173, 214, 0, 0, 0, 0, 0, 0, 0, 0, ...>
-...> }
-```
-
-That transaction can then be sent via JSON-RPC or DevP2P to execute the given function.
 
 ### Decoding
 
@@ -78,5 +69,3 @@ Currently supports:
 
 * [Solidity ABI](https://solidity.readthedocs.io/en/develop/abi-spec.html)
 * [Solidity Docs](https://solidity.readthedocs.io/)
-* [Solidity Grammar](https://github.com/ethereum/solidity/blob/develop/docs/grammar.txt)
-* [Exthereum Blockchain](https://github.com/exthereum/blockchain)

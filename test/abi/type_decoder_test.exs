@@ -3,8 +3,7 @@ defmodule ABI.TypeDecoderTest do
 
   doctest ABI.TypeDecoder
 
-  alias ABI.TypeDecoder
-  alias ABI.TypeEncoder
+  alias ABI.{TypeDecoder, TypeEncoder, FunctionSelector}
 
   describe "decode/2 '{:int, size}' type" do
     test "successfully decodes positives and negatives integers" do
@@ -14,7 +13,7 @@ defmodule ABI.TypeDecoderTest do
       result_to_decode =
         <<199, 158, 242, 32>> <> Base.decode16!(positive_int <> negative_int, case: :lower)
 
-      selector = %ABI.FunctionSelector{
+      selector = %FunctionSelector{
         function: "baz",
         method_id: <<199, 158, 242, 32>>,
         types: [
@@ -25,9 +24,9 @@ defmodule ABI.TypeDecoderTest do
       }
 
       result = [42, -9999]
-      assert ABI.TypeDecoder.decode(result_to_decode, selector) == result
+      assert TypeDecoder.decode(result_to_decode, selector) == result
 
-      assert ABI.TypeEncoder.encode(result, selector) ==
+      assert TypeEncoder.encode(result, selector) ==
                result_to_decode
     end
   end
@@ -558,7 +557,7 @@ defmodule ABI.TypeDecoderTest do
 
       res =
         encoded_pattern
-        |> ABI.TypeDecoder.decode(%ABI.FunctionSelector{
+        |> TypeDecoder.decode(%FunctionSelector{
           function: nil,
           types: [
             {:tuple, [:string, {:uint, 256}]}
