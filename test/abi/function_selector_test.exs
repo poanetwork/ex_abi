@@ -2,7 +2,7 @@ defmodule ABI.FunctionSelectorTest do
   use ExUnit.Case, async: true
   doctest ABI.FunctionSelector
 
-  import ABI.FunctionSelector
+  alias ABI.FunctionSelector
 
   describe "parse_specification_type/1" do
     test "with a tuple and components" do
@@ -64,7 +64,7 @@ defmodule ABI.FunctionSelectorTest do
         ]
       }
 
-      assert parse_specification_type(type) == expected
+      assert FunctionSelector.parse_specification_type(type) == expected
     end
   end
 
@@ -80,7 +80,7 @@ defmodule ABI.FunctionSelectorTest do
         ]
       }
 
-      assert parse_specification_item(abi) == %ABI.FunctionSelector{
+      assert FunctionSelector.parse_specification_item(abi) == %FunctionSelector{
                function: nil,
                input_names: [
                  "_golemFactory",
@@ -94,6 +94,54 @@ defmodule ABI.FunctionSelectorTest do
                type: :constructor,
                types: [:address, :address, {:uint, 256}, {:uint, 256}]
              }
+    end
+
+    test "parses array of tuples" do
+      function = %{
+        "constant" => true,
+        "inputs" => [
+          %{"internalType" => "uint160[]", "name" => "exitIds", "type" => "uint160[]"}
+        ],
+        "name" => "standardExits",
+        "outputs" => [
+          %{
+            "components" => [
+              %{"internalType" => "bool", "name" => "exitable", "type" => "bool"},
+              %{"internalType" => "uint256", "name" => "utxoPos", "type" => "uint256"},
+              %{
+                "internalType" => "bytes32",
+                "name" => "outputId",
+                "type" => "bytes32"
+              },
+              %{
+                "internalType" => "address payable",
+                "name" => "exitTarget",
+                "type" => "address"
+              },
+              %{"internalType" => "uint256", "name" => "amount", "type" => "uint256"},
+              %{
+                "internalType" => "uint256",
+                "name" => "bondSize",
+                "type" => "uint256"
+              }
+            ],
+            "internalType" => "struct PaymentExitDataModel.StandardExit[]",
+            "name" => "",
+            "type" => "tuple[]"
+          }
+        ],
+        "payable" => false,
+        "stateMutability" => "view",
+        "type" => "function"
+      }
+
+      expected_type = [
+        array: {:tuple, [:bool, {:uint, 256}, {:bytes, 32}, :address, {:uint, 256}, {:uint, 256}]}
+      ]
+
+      selector = FunctionSelector.parse_specification_item(function)
+
+      assert expected_type == selector.returns
     end
   end
 end

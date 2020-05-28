@@ -1,6 +1,7 @@
 # 0.4.0
 * Fix encoding and decoding of dynamic types (https://github.com/poanetwork/ex_abi/pull/34)
 * Allow to decoded function outputs (https://github.com/poanetwork/ex_abi/pull/36)
+* Parse array of tuples in the specification (https://github.com/poanetwork/ex_abi/pull/37)
 # 0.3.2
 * Fix array/tuple decoding (https://github.com/poanetwork/ex_abi/pull/32)
 # 0.3.1
