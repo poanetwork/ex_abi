@@ -158,6 +158,7 @@ defmodule ABI.FunctionSelector do
 
     input_types = Enum.map(named_inputs, &parse_specification_type/1)
     input_names = Enum.map(named_inputs, &Map.get(&1, "name"))
+
     output_types = Enum.map(named_outputs, &parse_specification_type/1)
 
     selector = %ABI.FunctionSelector{
@@ -226,6 +227,11 @@ defmodule ABI.FunctionSelector do
   def parse_specification_type(%{"type" => "tuple", "components" => components}) do
     sub_types = for component <- components, do: parse_specification_type(component)
     {:tuple, sub_types}
+  end
+
+  def parse_specification_type(%{"type" => "tuple[]", "components" => components}) do
+    sub_types = for component <- components, do: parse_specification_type(component)
+    {:array, {:tuple, sub_types}}
   end
 
   def parse_specification_type(%{"type" => type}), do: decode_type(type)

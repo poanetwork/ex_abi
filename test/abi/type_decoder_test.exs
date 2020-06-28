@@ -3,17 +3,19 @@ defmodule ABI.TypeDecoderTest do
 
   doctest ABI.TypeDecoder
 
-  alias ABI.TypeDecoder
-  alias ABI.TypeEncoder
+  alias ABI.{TypeDecoder, TypeEncoder, FunctionSelector}
 
   describe "decode/2 '{:int, size}' type" do
     test "successfully decodes positives and negatives integers" do
       positive_int = "000000000000000000000000000000000000000000000000000000000000002a"
       negative_int = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd8f1"
-      result_to_decode = Base.decode16!(positive_int <> negative_int, case: :lower)
 
-      selector = %ABI.FunctionSelector{
+      result_to_decode =
+        <<199, 158, 242, 32>> <> Base.decode16!(positive_int <> negative_int, case: :lower)
+
+      selector = %FunctionSelector{
         function: "baz",
+        method_id: <<199, 158, 242, 32>>,
         types: [
           {:int, 8},
           {:int, 256}
@@ -21,7 +23,11 @@ defmodule ABI.TypeDecoderTest do
         returns: :int
       }
 
-      assert ABI.TypeDecoder.decode(result_to_decode, selector) == [42, -9999]
+      result = [42, -9999]
+      assert TypeDecoder.decode(result_to_decode, selector) == result
+
+      assert TypeEncoder.encode(result, selector) ==
+               result_to_decode
     end
   end
 
@@ -70,6 +76,127 @@ defmodule ABI.TypeDecoderTest do
       assert result == encoded_result2 |> TypeDecoder.decode(types)
     end
 
+    test "with dynamic tuple type" do
+      types = [{:tuple, [:string]}]
+      params = [{"Hello"}]
+
+      expected_encoded_result =
+        "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000548656c6c6f000000000000000000000000000000000000000000000000000000"
+        |> encode_multiline_string()
+
+      assert TypeDecoder.decode(expected_encoded_result, types) == params
+      assert TypeEncoder.encode(params, types) == expected_encoded_result
+    end
+
+    test "with complex dynamic tuple type" do
+      types = [{:tuple, [:string, :string, {:uint, 256}]}]
+      params = [{"Hello", "Goodbye", 42}]
+
+      expected_encoded_result =
+        "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000002a000000000000000000000000000000000000000000000000000000000000000548656c6c6f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007476f6f6462796500000000000000000000000000000000000000000000000000"
+        |> encode_multiline_string()
+
+      assert TypeDecoder.decode(expected_encoded_result, types) == params
+      assert TypeEncoder.encode(params, types) == expected_encoded_result
+    end
+
+    test "with static tuple type" do
+      types = [{:tuple, [{:uint, 256}]}]
+      params = [{11}]
+
+      expected_encoded_result =
+        "000000000000000000000000000000000000000000000000000000000000000b"
+        |> encode_multiline_string()
+
+      assert TypeEncoder.encode(params, types) == expected_encoded_result
+      assert TypeDecoder.decode(expected_encoded_result, types) == params
+    end
+
+    test "with dynamic array type" do
+      types = [{:array, {:uint, 32}}]
+      params = [[17, 1]]
+
+      expected_encoded_result =
+        "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
+        |> encode_multiline_string()
+
+      assert TypeDecoder.decode(expected_encoded_result, types) == params
+      assert TypeEncoder.encode(params, types) == expected_encoded_result
+    end
+
+    test "with static array type" do
+      types = [{:array, {:uint, 32}, 2}]
+      params = [[17, 1]]
+
+      expected_encoded_result =
+        "00000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
+        |> encode_multiline_string()
+
+      assert TypeDecoder.decode(expected_encoded_result, types) == params
+      assert TypeEncoder.encode(params, types) == expected_encoded_result
+    end
+
+    test "with dynamic array in tuple" do
+      types = [{:tuple, [{:array, {:uint, 32}}]}]
+      params = [{[17, 1]}]
+
+      expected_result =
+        "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000001"
+        |> encode_multiline_string()
+
+      assert TypeDecoder.decode(expected_result, types) == params
+      assert TypeEncoder.encode(params, types) == expected_result
+    end
+
+    test "nested dynamic arrays example" do
+      types = [{:array, {:array, {:uint, 256}}}, {:array, :string}]
+
+      data =
+        """
+        0000000000000000000000000000000000000000000000000000000000000040
+        0000000000000000000000000000000000000000000000000000000000000140
+        0000000000000000000000000000000000000000000000000000000000000002
+        0000000000000000000000000000000000000000000000000000000000000040
+        00000000000000000000000000000000000000000000000000000000000000a0
+        0000000000000000000000000000000000000000000000000000000000000002
+        0000000000000000000000000000000000000000000000000000000000000001
+        0000000000000000000000000000000000000000000000000000000000000002
+        0000000000000000000000000000000000000000000000000000000000000001
+        0000000000000000000000000000000000000000000000000000000000000003
+        0000000000000000000000000000000000000000000000000000000000000003
+        0000000000000000000000000000000000000000000000000000000000000060
+        00000000000000000000000000000000000000000000000000000000000000a0
+        00000000000000000000000000000000000000000000000000000000000000e0
+        0000000000000000000000000000000000000000000000000000000000000003
+        6f6e650000000000000000000000000000000000000000000000000000000000
+        0000000000000000000000000000000000000000000000000000000000000003
+        74776f0000000000000000000000000000000000000000000000000000000000
+        0000000000000000000000000000000000000000000000000000000000000005
+        7468726565000000000000000000000000000000000000000000000000000000
+        """
+        |> encode_multiline_string()
+
+      assert [[[1, 2], [3]], ["one", "two", "three"]] ==
+               TypeDecoder.decode(data, types)
+
+      assert data ==
+               data
+               |> TypeDecoder.decode(types)
+               |> TypeEncoder.encode(types)
+    end
+
+    test "with multiple arrays in tuple" do
+      types = [{:tuple, [{:array, {:uint, 32}}, {:array, :string}]}]
+      params = [{[17, 1], ["Hello"]}]
+
+      expected_result =
+        "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000548656c6c6f000000000000000000000000000000000000000000000000000000"
+        |> encode_multiline_string()
+
+      assert TypeDecoder.decode(expected_result, types) == params
+      assert TypeEncoder.encode(params, types) == expected_result
+    end
+
     test "with a fixed-length array of static data" do
       data =
         """
@@ -82,7 +209,11 @@ defmodule ABI.TypeDecoderTest do
         """
         |> encode_multiline_string()
 
-      assert TypeDecoder.decode(data, [{:array, {:uint, 256}, 6}]) == [[7, 3, 0, 0, 0, 5]]
+      types = [{:array, {:uint, 256}, 6}]
+      result = [[7, 3, 0, 0, 0, 5]]
+
+      assert TypeDecoder.decode(data, types) == result
+      assert TypeEncoder.encode(result, types) == data
     end
 
     test "with a fixed-length array of dynamic data" do
@@ -171,9 +302,15 @@ defmodule ABI.TypeDecoderTest do
         """
         |> encode_multiline_string()
 
-      assert TypeDecoder.decode(data, [{:tuple, [{:uint, 256}, {:bytes, 10}]}]) == [
-               {0x123, "1234567890"}
-             ]
+      result = [
+        {0x123, "1234567890"}
+      ]
+
+      types = [{:tuple, [{:uint, 256}, {:bytes, 10}]}]
+
+      assert TypeDecoder.decode(data, types) == result
+
+      assert TypeEncoder.encode(result, types) == data
     end
 
     test "with dynamic tuple" do
@@ -181,20 +318,11 @@ defmodule ABI.TypeDecoderTest do
       result = [{"dave", 0x123, "Hello, world!"}]
 
       encoded_pattern =
-        """
-        0000000000000000000000000000000000000000000000000000000000000060
-        0000000000000000000000000000000000000000000000000000000000000123
-        00000000000000000000000000000000000000000000000000000000000000a0
-        0000000000000000000000000000000000000000000000000000000000000004
-        6461766500000000000000000000000000000000000000000000000000000000
-        000000000000000000000000000000000000000000000000000000000000000d
-        48656c6c6f2c20776f726c642100000000000000000000000000000000000000
-        """
+        "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000012300000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000046461766500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d48656c6c6f2c20776f726c642100000000000000000000000000000000000000"
         |> encode_multiline_string()
 
       encoded_result = TypeEncoder.encode(result, types)
       assert encoded_result == encoded_pattern
-
       assert result == encoded_result |> TypeDecoder.decode(types)
     end
 
@@ -340,6 +468,16 @@ defmodule ABI.TypeDecoderTest do
     #          ]) == expected
     # end
 
+    test "with dynamic array data not at the beginning of types" do
+      types = [:bool, {:array, :address}]
+      result = [true, []]
+
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
+
+      result = [true, [<<1::160>>]]
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
+    end
+
     test "with the output of an executed contract (simplified)" do
       encoded_pattern =
         """
@@ -394,39 +532,43 @@ defmodule ABI.TypeDecoderTest do
         "Cartagena"
       ]
 
-      assert TypeDecoder.decode(encoded_pattern, [
-               {:array, {:uint, 256}, 6},
-               :bool,
-               {:array, {:uint, 256}, 5},
-               {:array, :bool, 5},
-               {:uint, 256},
-               {:uint, 256},
-               {:uint, 256},
-               {:uint, 256},
-               :string
-             ]) == expected
+      types = [
+        {:array, {:uint, 256}, 6},
+        :bool,
+        {:array, {:uint, 256}, 5},
+        {:array, :bool, 5},
+        {:uint, 256},
+        {:uint, 256},
+        {:uint, 256},
+        {:uint, 256},
+        :string
+      ]
+
+      assert TypeDecoder.decode(encoded_pattern, types) == expected
+      assert TypeEncoder.encode(expected, types) == encoded_pattern
     end
 
     test "sample from Solidity docs 1" do
       encoded_pattern =
         """
-        0000000000000000000000000000000000000000000000000000000000000040
-        00000000000000000000000000000000000000000000000000000000000000ea
-        0000000000000000000000000000000000000000000000000000000000000008
-        48656c6c6f212521000000000000000000000000000000000000000000000000
+        000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000022000000000000000000000000000000000000000000000000000000000000000848656c6c6f212521000000000000000000000000000000000000000000000000
         """
         |> encode_multiline_string()
 
       res =
         encoded_pattern
-        |> ABI.TypeDecoder.decode(%ABI.FunctionSelector{
+        |> TypeDecoder.decode(%FunctionSelector{
           function: nil,
           types: [
             {:tuple, [:string, {:uint, 256}]}
           ]
         })
 
-      assert res == [{"Hello!%!", 234}]
+      assert res == [{"Hello!%!", 34}]
+
+      assert TypeEncoder.encode([{"Hello!%!", 34}], [
+               {:tuple, [:string, {:uint, 256}]}
+             ]) == encoded_pattern
     end
 
     test "simple non-trivial dynamic type offset" do
@@ -518,7 +660,10 @@ defmodule ABI.TypeDecoderTest do
       assert [0x123, [0x456, 0x789], "1234567890", "Hello, world!"] ==
                TypeDecoder.decode(data, types)
 
-      assert data == data |> TypeDecoder.decode(types) |> TypeEncoder.encode(types)
+      assert data ==
+               data
+               |> TypeDecoder.decode(types)
+               |> TypeEncoder.encode(types)
     end
   end
 
