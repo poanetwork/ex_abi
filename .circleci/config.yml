@@ -23,7 +23,7 @@ jobs:
       - run: mix deps.get
 
       - run: mix format --check-formatted
-      - run: HOME/.cargo/bin mix test
+      - run: mix test
 
       - save_cache:
           key: v1-dependency-cache-{{ arch }}-{{ checksum "mix.lock" }}
