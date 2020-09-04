@@ -188,7 +188,6 @@ defmodule ABI.TypeDecoder do
     {Enum.reverse(reversed_result), binary_rest}
   end
 
-  # TODO change to ExthCrypto.Math.mod when it's fixed ( mod(-75,32) == 21 )
   def mod(x, n) do
     remainder = rem(x, n)
 
@@ -369,8 +368,4 @@ defmodule ABI.TypeDecoder do
     <<value::signed-256, rest::binary>> = data
     {value, rest}
   end
-
-  def mod(x, n) when x > 0, do: rem(x, n)
-  def mod(x, n) when x < 0, do: rem(n + x, n)
-  def mod(0, _n), do: 0
 end
