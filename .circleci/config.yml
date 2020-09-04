@@ -6,11 +6,11 @@ jobs:
       - image: elixir:latest
         environment:
           MIX_ENV: test
-          PATH: $HOME/.cargo/bin/:$PATH
 
     steps:
       - checkout
       - run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      - run: echo 'export PATH=$HOME/.cargo/bin/:$PATH' >> $BASH_ENV
 
       - restore_cache:
          keys:
