@@ -8,7 +8,7 @@ jobs:
           MIX_ENV: test
     steps:
       - checkout
-      - run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+      - run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
       - restore_cache:
          keys:
