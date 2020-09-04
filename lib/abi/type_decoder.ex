@@ -359,10 +359,8 @@ defmodule ABI.TypeDecoder do
     raise "Unsupported decoding type: #{inspect(els)}"
   end
 
-  @spec decode_uint(binary(), integer()) :: {integer(), binary()}
-  def decode_uint(data, size_in_bits) do
-    # TODO: Create `left_pad` repo, err, add to `ExthCrypto.Math`
-    total_bit_size = size_in_bits + ExthCrypto.Math.mod(256 - size_in_bits, 256)
+  defp decode_uint(data, size_in_bits) do
+    total_bit_size = size_in_bits + mod(256 - size_in_bits, 256)
     <<value::integer-size(total_bit_size), rest::binary>> = data
     {value, rest}
   end
@@ -371,4 +369,8 @@ defmodule ABI.TypeDecoder do
     <<value::signed-256, rest::binary>> = data
     {value, rest}
   end
+
+  def mod(x, n) when x > 0, do: rem(x, n)
+  def mod(x, n) when x < 0, do: rem(n + x, n)
+  def mod(0, _n), do: 0
 end

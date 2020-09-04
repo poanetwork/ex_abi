@@ -1,3 +1,5 @@
+# 0.5.0
+* Add `ex_keccak` library because `keccakf1600` doesn't support otp 23. Now Rust is required
 # 0.4.0
 * Fix encoding and decoding of dynamic types (https://github.com/poanetwork/ex_abi/pull/34)
 * Allow to decoded function outputs (https://github.com/poanetwork/ex_abi/pull/36)
