@@ -4,13 +4,15 @@ The [Application Binary Interface](https://solidity.readthedocs.io/en/develop/ab
 
 ## Installation
 
+The latest version (`>= 0.5.0`) of `ex_abi` requires Rust because it uses a Rust NIF for KECCAK-256 hash. You can also try using `0.4.0`, it doesn't have a Rust requirement because it uses a C NIF. But `0.4.0` does not support OTP 23.
+
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 by adding `ex_abi` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:ex_abi, "~> 0.4.0"}
+    {:ex_abi, "~> 0.5.0"}
   ]
 end
 ```
