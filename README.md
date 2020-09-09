@@ -44,6 +44,79 @@ iex> ABI.decode("baz(uint,address)", "000000000000000000000000000000000000000000
 [50, <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1>>]
 ```
 
+### Function selectors
+
+Both `ABI.encode/2` and `ABI.decode/2` can accept a function selector as the first parameter. For example:
+
+``` elixir
+selector = %ABI.FunctionSelector{
+          function: "startInFlightExit",
+          input_names: [
+            "inFlightTx",
+            "inputTxs",
+            "inputUtxosPos",
+            "inputTxsInclusionProofs",
+            "inFlightTxWitnesses"
+          ],
+          inputs_indexed: nil,
+          method_id: <<90, 82, 133, 20>>,
+          returns: [],
+          type: :function,
+          types: [
+            tuple: [
+              :bytes,
+              {:array, :bytes},
+              {:array, {:uint, 256}},
+              {:array, :bytes},
+              {:array, :bytes}
+            ]
+          ]
+        }
+
+ABI.encode(selector, params)
+```
+
+To parse function selector from the abi json, use `ABI.parse_specification/2`:
+
+``` elixir
+iex> [%{
+...>   "inputs" => [
+...>      %{"name" => "_numProposals", "type" => "uint8"}
+...>   ],
+...>   "payable" => false,
+...>   "stateMutability" => "nonpayable",
+...>   "type" => "constructor"
+...> }]
+...> |> ABI.parse_specification
+[%ABI.FunctionSelector{function: nil, input_names: ["_numProposals"], inputs_indexed: nil, method_id: <<99, 53, 230, 34>>, returns: [], type: :constructor, types: [uint: 8]}]
+```
+
+#### Decoding output
+
+By default, decode and encode functions try to decode/encode input (params that passed to the function). To decode/encode output pass `:output` as the third parameter:
+
+``` elixir
+      selector = %FunctionSelector{
+        function: "getVersion",
+        input_names: [],
+        inputs_indexed: nil,
+        method_id: <<13, 142, 110, 44>>,
+        returns: [:string],
+        type: :function,
+        types: []
+      }
+
+      data =
+        "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000d312e302e342b6136396337363300000000000000000000000000000000000000"
+        |> Base.decode16!(case: :lower)
+
+      expected_result = ["1.0.4+a69c763"]
+
+      assert expected_result == ABI.decode(selector, data, :output)
+      assert data == ABI.encode(selector, expected_result, :output)
+```
+
+
 ## Support
 
 Currently supports:
@@ -54,16 +127,15 @@ Currently supports:
   * [X] `uint`
   * [X] `int`
   * [X] `bool`
-  * [ ] `fixed<M>x<N>`
-  * [ ] `ufixed<M>x<N>`
-  * [ ] `fixed`
-  * [ ] `bytes<M>`
-  * [ ] `function`
+  * [X] `fixed<M>x<N>`
+  * [X] `ufixed<M>x<N>`
+  * [X] `fixed`
+  * [X] `bytes<M>`
   * [X] `<type>[M]`
   * [X] `bytes`
   * [X] `string`
   * [X] `<type>[]`
-  * [X] `(T1,T2,...,Tn)` (* currently ABI parsing doesn't parse tuples with multiple elements)
+  * [X] `(T1,T2,...,Tn)`
 
 # Docs
 
