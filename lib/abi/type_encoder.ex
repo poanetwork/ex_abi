@@ -200,10 +200,10 @@ defmodule ABI.TypeEncoder do
 
   defp encode_method_id(function_selector) do
     # Encode selector e.g. "baz(uint32,bool)" and take keccak
-    kec =
+    {:ok, kec} =
       function_selector
       |> FunctionSelector.encode()
-      |> ExthCrypto.Hash.Keccak.kec()
+      |> ExKeccak.hash_256()
 
     # Take first four bytes
     <<init::binary-size(4), _rest::binary>> = kec

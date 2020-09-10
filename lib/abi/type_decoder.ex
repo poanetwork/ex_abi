@@ -188,7 +188,6 @@ defmodule ABI.TypeDecoder do
     {Enum.reverse(reversed_result), binary_rest}
   end
 
-  # TODO change to ExthCrypto.Math.mod when it's fixed ( mod(-75,32) == 21 )
   def mod(x, n) do
     remainder = rem(x, n)
 
@@ -359,10 +358,8 @@ defmodule ABI.TypeDecoder do
     raise "Unsupported decoding type: #{inspect(els)}"
   end
 
-  @spec decode_uint(binary(), integer()) :: {integer(), binary()}
-  def decode_uint(data, size_in_bits) do
-    # TODO: Create `left_pad` repo, err, add to `ExthCrypto.Math`
-    total_bit_size = size_in_bits + ExthCrypto.Math.mod(256 - size_in_bits, 256)
+  defp decode_uint(data, size_in_bits) do
+    total_bit_size = size_in_bits + mod(256 - size_in_bits, 256)
     <<value::integer-size(total_bit_size), rest::binary>> = data
     {value, rest}
   end
