@@ -1,3 +1,5 @@
+# 0.5.1
+* Chore: bump `ex_keccak` version
 # 0.5.0
 * Add `ex_keccak` library because `keccakf1600` doesn't support otp 23. Now Rust is required
 # 0.4.0
