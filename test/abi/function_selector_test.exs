@@ -144,4 +144,105 @@ defmodule ABI.FunctionSelectorTest do
       assert expected_type == selector.returns
     end
   end
+
+  describe "simple_types?/1" do
+    test "verifies simple types" do
+      types = [
+        %{
+          "internalType" => "uint256",
+          "name" => "erc20VaultId",
+          "type" => "uint256"
+        },
+        %{
+          "internalType" => "uint256",
+          "name" => "supportedTxType",
+          "type" => "uint256"
+        }
+      ]
+
+      assert FunctionSelector.simple_types?(types)
+    end
+
+    test "verifies tuple type" do
+      types = [
+        %{
+          "components" => [
+            %{
+              "internalType" => "uint256",
+              "name" => "minExitPeriod",
+              "type" => "uint256"
+            }
+          ],
+          "internalType" => "struct ExitableTimestamp.Calculator",
+          "name" => "exitableTimestampCalculator",
+          "type" => "tuple"
+        }
+      ]
+
+      assert FunctionSelector.simple_types?(types)
+    end
+
+    test "invalidates complex type" do
+      types = [
+        %{
+          "internalType" => "contract PlasmaFramework",
+          "name" => "framework",
+          "type" => "PlasmaFramework"
+        }
+      ]
+
+      refute FunctionSelector.simple_types?(types)
+    end
+
+    test "invalidates comples tuple type" do
+      types = [
+        %{
+          "components" => [
+            %{
+              "components" => [
+                %{
+                  "internalType" => "uint256",
+                  "name" => "minExitPeriod",
+                  "type" => "uint256"
+                }
+              ],
+              "internalType" => "struct ExitableTimestamp.Calculator",
+              "name" => "exitableTimestampCalculator",
+              "type" => "tuple"
+            },
+            %{
+              "internalType" => "uint256",
+              "name" => "ethVaultId",
+              "type" => "uint256"
+            },
+            %{
+              "internalType" => "uint256",
+              "name" => "erc20VaultId",
+              "type" => "uint256"
+            },
+            %{
+              "internalType" => "uint256",
+              "name" => "supportedTxType",
+              "type" => "uint256"
+            },
+            %{
+              "internalType" => "contract IExitProcessor",
+              "name" => "exitProcessor",
+              "type" => "IExitProcessor"
+            },
+            %{
+              "internalType" => "contract PlasmaFramework",
+              "name" => "framework",
+              "type" => "PlasmaFramework"
+            }
+          ],
+          "internalType" => "struct PaymentStartStandardExit.Controller",
+          "name" => "",
+          "type" => "tuple"
+        }
+      ]
+
+      refute FunctionSelector.simple_types?(types)
+    end
+  end
 end
