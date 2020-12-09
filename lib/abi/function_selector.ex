@@ -5,6 +5,7 @@ defmodule ABI.FunctionSelector do
   """
 
   require Integer
+  require Logger
 
   @type type ::
           {:uint, integer()}
@@ -168,8 +169,8 @@ defmodule ABI.FunctionSelector do
            "inputs" => named_inputs,
            "outputs" => named_outputs
          } <- item,
-         true <- simple_types?(named_inputs),
-         true <- simple_types?(named_outputs) do
+         true <- simple_types?(named_inputs, item),
+         true <- simple_types?(named_outputs, item) do
       input_types = Enum.map(named_inputs, &parse_specification_type/1)
       input_names = Enum.map(named_inputs, &Map.get(&1, "name"))
 
@@ -191,7 +192,7 @@ defmodule ABI.FunctionSelector do
 
   def parse_specification_item(%{"type" => "constructor"} = item) do
     with %{"inputs" => named_inputs} <- item,
-         true <- simple_types?(named_inputs) do
+         true <- simple_types?(named_inputs, item) do
       input_types = Enum.map(named_inputs, &parse_specification_type/1)
       input_names = Enum.map(named_inputs, &Map.get(&1, "name"))
 
@@ -212,7 +213,7 @@ defmodule ABI.FunctionSelector do
            "name" => event_name,
            "inputs" => named_inputs
          } <- item,
-         true <- simple_types?(named_inputs) do
+         true <- simple_types?(named_inputs, item) do
       input_types = Enum.map(named_inputs, &parse_specification_type/1)
       input_names = Enum.map(named_inputs, &Map.get(&1, "name"))
       inputs_indexed = Enum.map(named_inputs, &Map.get(&1, "indexed"))
@@ -244,26 +245,34 @@ defmodule ABI.FunctionSelector do
 
   def parse_specification_item(_), do: nil
 
-  @spec simple_types?([map()]) :: boolean()
-  def simple_types?([]), do: true
+  @spec simple_types?([map()], map()) :: boolean()
+  def simple_types?([], _item), do: true
 
-  def simple_types?([%{"type" => tuple_type, "components" => current_types} | types])
+  def simple_types?([%{"type" => tuple_type, "components" => current_types} | types], item)
       when tuple_type in ["tuple", "tuple[]"] do
-    case simple_types?(current_types) do
-      true -> simple_types?(types)
-      false -> false
+    case simple_types?(current_types, item) do
+      true ->
+        simple_types?(types, item)
+
+      false ->
+        Logger.warn("Can not parse #{inspect(item)} because it contains complex types")
+        false
     end
   end
 
-  def simple_types?([%{"type" => type} | types]) do
+  def simple_types?([%{"type" => type} | types], item) do
     simple_type? =
       Enum.any?(@simple_types, fn simple_type ->
         String.contains?(type, simple_type)
       end)
 
     case simple_type? do
-      true -> simple_types?(types)
-      false -> false
+      true ->
+        simple_types?(types, item)
+
+      false ->
+        Logger.warn("Can not parse #{inspect(item)} because it contains complex types")
+        false
     end
   end
 

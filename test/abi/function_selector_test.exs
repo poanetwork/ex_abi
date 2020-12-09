@@ -1,5 +1,8 @@
 defmodule ABI.FunctionSelectorTest do
   use ExUnit.Case, async: true
+
+  import ExUnit.CaptureLog
+
   doctest ABI.FunctionSelector
 
   alias ABI.FunctionSelector
@@ -292,7 +295,7 @@ defmodule ABI.FunctionSelectorTest do
         }
       ]
 
-      assert FunctionSelector.simple_types?(types)
+      assert FunctionSelector.simple_types?(types, %{})
     end
 
     test "verifies tuple type" do
@@ -311,7 +314,7 @@ defmodule ABI.FunctionSelectorTest do
         }
       ]
 
-      assert FunctionSelector.simple_types?(types)
+      assert FunctionSelector.simple_types?(types, %{})
     end
 
     test "invalidates complex type" do
@@ -323,7 +326,10 @@ defmodule ABI.FunctionSelectorTest do
         }
       ]
 
-      refute FunctionSelector.simple_types?(types)
+      assert capture_log(fn ->
+               refute FunctionSelector.simple_types?(types, %{})
+             end) =~
+               "Can not parse %{} because it contains complex types"
     end
 
     test "invalidates comples tuple type" do
@@ -374,7 +380,10 @@ defmodule ABI.FunctionSelectorTest do
         }
       ]
 
-      refute FunctionSelector.simple_types?(types)
+      assert capture_log(fn ->
+               refute FunctionSelector.simple_types?(types, %{})
+             end) =~
+               "Can not parse %{} because it contains complex types"
     end
   end
 end
