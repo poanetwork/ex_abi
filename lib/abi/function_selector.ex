@@ -5,6 +5,7 @@ defmodule ABI.FunctionSelector do
   """
 
   require Integer
+  require Logger
 
   @type type ::
           {:uint, integer()}
@@ -50,6 +51,19 @@ defmodule ABI.FunctionSelector do
     input_names: [],
     types: [],
     returns: []
+  ]
+
+  @simple_types [
+    "uint",
+    "int",
+    "address",
+    "bool",
+    "fixed",
+    "uint",
+    "ufixed",
+    "bytes",
+    "string",
+    "tuple"
   ]
 
   @doc """
@@ -150,64 +164,72 @@ defmodule ABI.FunctionSelector do
 
   @doc false
   def parse_specification_item(%{"type" => "function"} = item) do
-    %{
-      "name" => function_name,
-      "inputs" => named_inputs,
-      "outputs" => named_outputs
-    } = item
+    with %{
+           "name" => function_name,
+           "inputs" => named_inputs,
+           "outputs" => named_outputs
+         } <- item,
+         true <- simple_types?(named_inputs, item),
+         true <- simple_types?(named_outputs, item) do
+      input_types = Enum.map(named_inputs, &parse_specification_type/1)
+      input_names = Enum.map(named_inputs, &Map.get(&1, "name"))
 
-    input_types = Enum.map(named_inputs, &parse_specification_type/1)
-    input_names = Enum.map(named_inputs, &Map.get(&1, "name"))
+      output_types = Enum.map(named_outputs, &parse_specification_type/1)
 
-    output_types = Enum.map(named_outputs, &parse_specification_type/1)
+      selector = %ABI.FunctionSelector{
+        function: function_name,
+        types: input_types,
+        returns: output_types,
+        input_names: input_names,
+        type: :function
+      }
 
-    selector = %ABI.FunctionSelector{
-      function: function_name,
-      types: input_types,
-      returns: output_types,
-      input_names: input_names,
-      type: :function
-    }
-
-    add_method_id(selector)
+      add_method_id(selector)
+    else
+      _ -> nil
+    end
   end
 
   def parse_specification_item(%{"type" => "constructor"} = item) do
-    %{
-      "inputs" => named_inputs
-    } = item
+    with %{"inputs" => named_inputs} <- item,
+         true <- simple_types?(named_inputs, item) do
+      input_types = Enum.map(named_inputs, &parse_specification_type/1)
+      input_names = Enum.map(named_inputs, &Map.get(&1, "name"))
 
-    input_types = Enum.map(named_inputs, &parse_specification_type/1)
-    input_names = Enum.map(named_inputs, &Map.get(&1, "name"))
+      selector = %ABI.FunctionSelector{
+        types: input_types,
+        input_names: input_names,
+        type: :constructor
+      }
 
-    selector = %ABI.FunctionSelector{
-      types: input_types,
-      input_names: input_names,
-      type: :constructor
-    }
-
-    add_method_id(selector)
+      add_method_id(selector)
+    else
+      _ -> nil
+    end
   end
 
   def parse_specification_item(%{"type" => "event"} = item) do
-    %{
-      "name" => event_name,
-      "inputs" => named_inputs
-    } = item
+    with %{
+           "name" => event_name,
+           "inputs" => named_inputs
+         } <- item,
+         true <- simple_types?(named_inputs, item) do
+      input_types = Enum.map(named_inputs, &parse_specification_type/1)
+      input_names = Enum.map(named_inputs, &Map.get(&1, "name"))
+      inputs_indexed = Enum.map(named_inputs, &Map.get(&1, "indexed"))
 
-    input_types = Enum.map(named_inputs, &parse_specification_type/1)
-    input_names = Enum.map(named_inputs, &Map.get(&1, "name"))
-    inputs_indexed = Enum.map(named_inputs, &Map.get(&1, "indexed"))
+      selector = %ABI.FunctionSelector{
+        function: event_name,
+        types: input_types,
+        input_names: input_names,
+        inputs_indexed: inputs_indexed,
+        type: :event
+      }
 
-    selector = %ABI.FunctionSelector{
-      function: event_name,
-      types: input_types,
-      input_names: input_names,
-      inputs_indexed: inputs_indexed,
-      type: :event
-    }
-
-    add_method_id(selector)
+      add_method_id(selector)
+    else
+      _ -> nil
+    end
   end
 
   def parse_specification_item(%{"type" => "fallback"}) do
@@ -223,6 +245,37 @@ defmodule ABI.FunctionSelector do
 
   def parse_specification_item(_), do: nil
 
+  @spec simple_types?([map()], map()) :: boolean()
+  def simple_types?([], _item), do: true
+
+  def simple_types?([%{"type" => tuple_type, "components" => current_types} | types], item)
+      when tuple_type in ["tuple", "tuple[]"] do
+    case simple_types?(current_types, item) do
+      true ->
+        simple_types?(types, item)
+
+      false ->
+        Logger.warn("Can not parse #{inspect(item)} because it contains complex types")
+        false
+    end
+  end
+
+  def simple_types?([%{"type" => type} | types], item) do
+    simple_type? =
+      Enum.any?(@simple_types, fn simple_type ->
+        String.contains?(type, simple_type)
+      end)
+
+    case simple_type? do
+      true ->
+        simple_types?(types, item)
+
+      false ->
+        Logger.warn("Can not parse #{inspect(item)} because it contains complex types")
+        false
+    end
+  end
+
   @doc false
   def parse_specification_type(%{"type" => "tuple", "components" => components}) do
     sub_types = for component <- components, do: parse_specification_type(component)
@@ -232,6 +285,20 @@ defmodule ABI.FunctionSelector do
   def parse_specification_type(%{"type" => "tuple[]", "components" => components}) do
     sub_types = for component <- components, do: parse_specification_type(component)
     {:array, {:tuple, sub_types}}
+  end
+
+  def parse_specification_type(%{
+        "type" => "tuple[" <> tail,
+        "components" => components
+      }) do
+    sub_types = for component <- components, do: parse_specification_type(component)
+
+    size =
+      tail
+      |> String.replace("]", "")
+      |> String.to_integer()
+
+    {:array, {:tuple, sub_types}, size}
   end
 
   def parse_specification_type(%{"type" => type}), do: decode_type(type)
