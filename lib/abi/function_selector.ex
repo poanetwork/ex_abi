@@ -278,6 +278,20 @@ defmodule ABI.FunctionSelector do
     {:array, {:tuple, sub_types}}
   end
 
+  def parse_specification_type(%{
+        "type" => "tuple[" <> tail,
+        "components" => components
+      }) do
+    sub_types = for component <- components, do: parse_specification_type(component)
+
+    size =
+      tail
+      |> String.replace("]", "")
+      |> String.to_integer()
+
+    {:array, {:tuple, sub_types}, size}
+  end
+
   def parse_specification_type(%{"type" => type}), do: decode_type(type)
 
   @doc """

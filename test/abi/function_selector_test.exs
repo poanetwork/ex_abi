@@ -143,6 +143,138 @@ defmodule ABI.FunctionSelectorTest do
 
       assert expected_type == selector.returns
     end
+
+    test "parses fixed array of tuples" do
+      function = %{
+        "constant" => false,
+        "inputs" => [
+          %{"internalType" => "uint160", "name" => "exitId", "type" => "uint160"},
+          %{
+            "components" => [
+              %{"internalType" => "bool", "name" => "isCanonical", "type" => "bool"},
+              %{
+                "internalType" => "uint64",
+                "name" => "exitStartTimestamp",
+                "type" => "uint64"
+              },
+              %{"internalType" => "uint256", "name" => "exitMap", "type" => "uint256"},
+              %{
+                "internalType" => "uint256",
+                "name" => "position",
+                "type" => "uint256"
+              },
+              %{
+                "components" => [
+                  %{
+                    "internalType" => "bytes32",
+                    "name" => "outputId",
+                    "type" => "bytes32"
+                  },
+                  %{
+                    "internalType" => "address payable",
+                    "name" => "exitTarget",
+                    "type" => "address"
+                  },
+                  %{
+                    "internalType" => "address",
+                    "name" => "token",
+                    "type" => "address"
+                  },
+                  %{
+                    "internalType" => "uint256",
+                    "name" => "amount",
+                    "type" => "uint256"
+                  },
+                  %{
+                    "internalType" => "uint256",
+                    "name" => "piggybackBondSize",
+                    "type" => "uint256"
+                  }
+                ],
+                "internalType" => "struct PaymentExitDataModel.WithdrawData[4]",
+                "name" => "inputs",
+                "type" => "tuple[4]"
+              },
+              %{
+                "components" => [
+                  %{
+                    "internalType" => "bytes32",
+                    "name" => "outputId",
+                    "type" => "bytes32"
+                  },
+                  %{
+                    "internalType" => "address payable",
+                    "name" => "exitTarget",
+                    "type" => "address"
+                  },
+                  %{
+                    "internalType" => "address",
+                    "name" => "token",
+                    "type" => "address"
+                  },
+                  %{
+                    "internalType" => "uint256",
+                    "name" => "amount",
+                    "type" => "uint256"
+                  },
+                  %{
+                    "internalType" => "uint256",
+                    "name" => "piggybackBondSize",
+                    "type" => "uint256"
+                  }
+                ],
+                "internalType" => "struct PaymentExitDataModel.WithdrawData[4]",
+                "name" => "outputs",
+                "type" => "tuple[4]"
+              },
+              %{
+                "internalType" => "address payable",
+                "name" => "bondOwner",
+                "type" => "address"
+              },
+              %{
+                "internalType" => "uint256",
+                "name" => "bondSize",
+                "type" => "uint256"
+              },
+              %{
+                "internalType" => "uint256",
+                "name" => "oldestCompetitorPosition",
+                "type" => "uint256"
+              }
+            ],
+            "internalType" => "struct PaymentExitDataModel.InFlightExit",
+            "name" => "exit",
+            "type" => "tuple"
+          }
+        ],
+        "name" => "setInFlightExit",
+        "outputs" => [],
+        "payable" => false,
+        "stateMutability" => "nonpayable",
+        "type" => "function"
+      }
+
+      expected_type = [
+        {:uint, 160},
+        {:tuple,
+         [
+           :bool,
+           {:uint, 64},
+           {:uint, 256},
+           {:uint, 256},
+           {:array, {:tuple, [{:bytes, 32}, :address, :address, {:uint, 256}, {:uint, 256}]}, 4},
+           {:array, {:tuple, [{:bytes, 32}, :address, :address, {:uint, 256}, {:uint, 256}]}, 4},
+           :address,
+           {:uint, 256},
+           {:uint, 256}
+         ]}
+      ]
+
+      selector = FunctionSelector.parse_specification_item(function)
+
+      assert expected_type == selector.types
+    end
   end
 
   describe "simple_types?/1" do
