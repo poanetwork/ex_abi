@@ -418,7 +418,6 @@ defmodule ABITest do
         function: "getVersion",
         input_names: [],
         inputs_indexed: nil,
-        method_id: <<13, 142, 110, 44>>,
         returns: [:string],
         type: :function,
         types: []
