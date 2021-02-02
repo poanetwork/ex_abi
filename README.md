@@ -12,7 +12,7 @@ by adding `ex_abi` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:ex_abi, "~> 0.5.2"}
+    {:ex_abi, "~> 0.5.3"}
   ]
 end
 ```

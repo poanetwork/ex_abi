@@ -1,3 +1,5 @@
+# 0.5.3
+* Fix decoding of output data prefixed with method id (https://github.com/poanetwork/ex_abi/pull/50)
 # 0.5.2
 * Fix parsing of function selectors (https://github.com/poanetwork/ex_abi/pull/47)
 # 0.5.1
