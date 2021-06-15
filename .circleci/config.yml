@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/ex_abi
     docker:
-      - image: elixir:latest
+      - image: elixir:1.11.4
         environment:
           MIX_ENV: test
 
