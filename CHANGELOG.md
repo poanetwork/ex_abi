@@ -1,3 +1,5 @@
+# 0.5.4
+* Bump ex_keccak (otp 24 support) (https://github.com/poanetwork/ex_abi/pull/59)
 # 0.5.3
 * Fix decoding of output data prefixed with method id (https://github.com/poanetwork/ex_abi/pull/50)
 # 0.5.2
