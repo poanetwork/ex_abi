@@ -200,7 +200,7 @@ defmodule ABI.TypeEncoder do
 
   defp encode_method_id(function_selector) do
     # Encode selector e.g. "baz(uint32,bool)" and take keccak
-    {:ok, kec} =
+    kec =
       function_selector
       |> FunctionSelector.encode()
       |> ExKeccak.hash_256()

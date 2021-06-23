@@ -367,7 +367,7 @@ defmodule ABI.FunctionSelector do
     signature = encode(selector)
 
     case ExKeccak.hash_256(signature) do
-      {:ok, <<method_id::binary-size(4), _::binary>>} ->
+      <<method_id::binary-size(4), _::binary>> ->
         %{selector | method_id: method_id}
 
       _ ->

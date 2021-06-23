@@ -36,9 +36,9 @@ defmodule ABI.Event do
 
   Examples:
 
-      iex> {:ok, topic1} = ExKeccak.hash_256("WantsPets(string,uint256,bool)")
+      iex> topic1 = ExKeccak.hash_256("WantsPets(string,uint256,bool)")
       # first argument is indexed, so it is a topic
-      ...> {:ok, topic2} = ExKeccak.hash_256("bob")
+      ...> topic2 = ExKeccak.hash_256("bob")
       # third argument is indexed, so it is also a topic
       ...> topic3 = "0000000000000000000000000000000000000000000000000000000000000001" |> Base.decode16!()
       # there are only two indexed arguments, so the fourth topic is `nil`
