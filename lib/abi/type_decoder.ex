@@ -151,9 +151,10 @@ defmodule ABI.TypeDecoder do
 
   def decode(encoded_data, %FunctionSelector{returns: types, method_id: method_id}, :output)
       when is_binary(method_id) do
-    {:ok, ^method_id, rest} = ABI.Util.split_method_id(encoded_data)
-
-    decode_raw(rest, types)
+    case ABI.Util.split_method_id(encoded_data) do
+      {:ok, ^method_id, rest} -> decode_raw(rest, types)
+      _ -> decode_raw(encoded_data, types)
+    end
   end
 
   def decode(encoded_data, %FunctionSelector{returns: types}, :output) do
