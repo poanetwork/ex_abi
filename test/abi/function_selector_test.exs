@@ -99,6 +99,30 @@ defmodule ABI.FunctionSelectorTest do
              }
     end
 
+    test "parses error" do
+      error = %{
+        "inputs" => [
+          %{
+            "internalType" => "uint256",
+            "name" => "reason",
+            "type" => "uint256"
+          }
+        ],
+        "name" => "DummyError",
+        "type" => "error"
+      }
+
+      assert %ABI.FunctionSelector{
+               function: "DummyError",
+               input_names: ["reason"],
+               inputs_indexed: nil,
+               method_id: <<26, 23, 164, 46>>,
+               returns: [],
+               type: :error,
+               types: [uint: 256]
+             } = FunctionSelector.parse_specification_item(error)
+    end
+
     test "parses array of tuples" do
       function = %{
         "constant" => true,

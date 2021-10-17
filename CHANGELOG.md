@@ -1,3 +1,5 @@
+# 0.5.7
+* Support error types (https://github.com/poanetwork/ex_abi/pull/69)
 # 0.5.6
 * Bump ex_keccak version (https://github.com/poanetwork/ex_abi/pull/67)
 # 0.5.5
