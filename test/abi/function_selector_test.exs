@@ -99,7 +99,7 @@ defmodule ABI.FunctionSelectorTest do
              }
     end
 
-    test "parses error 1" do
+    test "parses error" do
       error = %{
         "inputs" => [
           %{
@@ -113,10 +113,10 @@ defmodule ABI.FunctionSelectorTest do
       }
 
       assert %ABI.FunctionSelector{
-               function: nil,
+               function: "DummyError",
                input_names: ["reason"],
                inputs_indexed: nil,
-               method_id: <<109, 155, 106, 107>>,
+               method_id: <<26, 23, 164, 46>>,
                returns: [],
                type: :error,
                types: [uint: 256]

@@ -209,12 +209,13 @@ defmodule ABI.FunctionSelector do
   end
 
   def parse_specification_item(%{"type" => "error"} = item) do
-    with %{"inputs" => named_inputs} <- item,
+    with %{"inputs" => named_inputs, "name" => name} <- item,
          true <- simple_types?(named_inputs, item) do
       input_types = Enum.map(named_inputs, &parse_specification_type/1)
       input_names = Enum.map(named_inputs, &Map.get(&1, "name"))
 
       selector = %ABI.FunctionSelector{
+        function: name,
         types: input_types,
         input_names: input_names,
         type: :error
