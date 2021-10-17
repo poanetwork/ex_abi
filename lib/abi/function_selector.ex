@@ -39,7 +39,7 @@ defmodule ABI.FunctionSelector do
           input_names: [String.t()],
           types: [type],
           returns: [type],
-          type: :event | :function | :constructor,
+          type: :event | :function | :constructor | :error,
           inputs_indexed: [boolean]
         }
 
@@ -200,6 +200,24 @@ defmodule ABI.FunctionSelector do
         types: input_types,
         input_names: input_names,
         type: :constructor
+      }
+
+      add_method_id(selector)
+    else
+      _ -> nil
+    end
+  end
+
+  def parse_specification_item(%{"type" => "error"} = item) do
+    with %{"inputs" => named_inputs} <- item,
+         true <- simple_types?(named_inputs, item) do
+      input_types = Enum.map(named_inputs, &parse_specification_type/1)
+      input_names = Enum.map(named_inputs, &Map.get(&1, "name"))
+
+      selector = %ABI.FunctionSelector{
+        types: input_types,
+        input_names: input_names,
+        type: :error
       }
 
       add_method_id(selector)
