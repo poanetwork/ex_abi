@@ -100,6 +100,29 @@ defmodule ABI.TypeEncoderTest do
       assert TypeDecoder.decode(expected_result, types) == params
     end
 
+    test "encodes [{string, bool}] where tuple as list" do
+      params = [["awesome", true]]
+      decoded = [{"awesome", true}]
+
+      types = [
+        {:tuple, [:string, :bool]}
+      ]
+
+      result =
+        params
+        |> TypeEncoder.encode(%FunctionSelector{
+          function: nil,
+          types: types
+        })
+
+      expected_result =
+        "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000007617765736f6d6500000000000000000000000000000000000000000000000000"
+        |> Base.decode16!(case: :lower)
+
+      assert expected_result == result
+      assert TypeDecoder.decode(expected_result, types) == decoded
+    end
+
     test "encodes [17, 1]]" do
       selector = %FunctionSelector{
         function: "baz",
@@ -193,6 +216,26 @@ defmodule ABI.TypeEncoderTest do
                encoded_pattern
 
       assert ABI.TypeDecoder.decode(encoded_pattern, selector) == data_to_encode
+    end
+
+    test "encodes [string, bool] where tuple as list" do
+      data_to_encode = [["awesome", true]]
+      decoded = [{"awesome", true}]
+
+      selector = %FunctionSelector{
+        types: [{:tuple, [:string, :bool]}]
+      }
+
+      result = ABI.TypeEncoder.encode(data_to_encode, selector)
+
+      encoded_pattern =
+        "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000007617765736f6d6500000000000000000000000000000000000000000000000000"
+        |> Base.decode16!(case: :lower)
+
+      assert result ==
+               encoded_pattern
+
+      assert ABI.TypeDecoder.decode(encoded_pattern, selector) == decoded
     end
 
     test "encodes [[1], [2]]" do
@@ -309,6 +352,23 @@ defmodule ABI.TypeEncoderTest do
     test "encodes {:tuple, [{:uint, 32}, :bool, {:bytes, 2}]}" do
       params =
         [{17, true, <<32, 64>>}]
+        |> ABI.TypeEncoder.encode(%FunctionSelector{
+          function: nil,
+          types: [
+            {:tuple, [{:uint, 32}, :bool, {:bytes, 2}]}
+          ]
+        })
+        |> Base.encode16(case: :lower)
+
+      expected_result =
+        "000000000000000000000000000000000000000000000000000000000000001100000000000000000000000000000000000000000000000000000000000000012040000000000000000000000000000000000000000000000000000000000000"
+
+      assert params == expected_result
+    end
+
+    test "encodes {:tuple, [{:uint, 32}, :bool, {:bytes, 2}]} where tuple as list" do
+      params =
+        [[17, true, <<32, 64>>]]
         |> ABI.TypeEncoder.encode(%FunctionSelector{
           function: nil,
           types: [
