@@ -180,6 +180,11 @@ defmodule ABI.TypeEncoder do
        when is_tuple(tuple_parameters) do
     list_parameters = Tuple.to_list(tuple_parameters)
 
+    do_encode_type({:tuple, types}, list_parameters, static_acc, dynamic_acc)
+  end
+
+  defp do_encode_type(type = {:tuple, types}, list_parameters, static_acc, dynamic_acc)
+       when is_list(list_parameters) do
     result = do_encode(list_parameters, types)
 
     if FunctionSelector.is_dynamic?(type) do
