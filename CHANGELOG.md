@@ -1,3 +1,5 @@
+# 0.5.8
+* Allow to encode lists for tuple types (https://github.com/poanetwork/ex_abi/pull/72)
 # 0.5.7
 * Support error types (https://github.com/poanetwork/ex_abi/pull/69)
 # 0.5.6
