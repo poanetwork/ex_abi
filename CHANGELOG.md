@@ -1,3 +1,6 @@
+# 0.5.9
+* Update jason from 1.2.0 to 1.3.0
+* Update ex_keccak from 0.2.2 to 0.3.0
 # 0.5.8
 * Allow to encode lists for tuple types (https://github.com/poanetwork/ex_abi/pull/72)
 # 0.5.7
