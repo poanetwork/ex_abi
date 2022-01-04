@@ -45,7 +45,7 @@
 * Add `encode_type/1` to give a public API for encoding single types (used for display in blockscout) (https://github.com/poanetwork/ex_abi/pull/9)
 * Add `find_and_decode/2` which finds the correct function selector from the list by method_id and decodes the provided call (https://github.com/poanetwork/ex_abi/pull/9)
 # 0.1.16
-* Allow functions to have mutliple output types (https://github.com/poanetwork/ex_abi/pull/8)
+* Allow functions to have multiple output types (https://github.com/poanetwork/ex_abi/pull/8)
 # 0.1.15
 * Add support for tuple type for inputs and outputs (https://github.com/poanetwork/ex_abi/pull/6)
 * Fix support for fixed-length arrays (https://github.com/poanetwork/ex_abi/pull/7)
@@ -74,7 +74,7 @@
 # 0.1.5
 * Bugfix so that addresses are still left padded.
 # 0.1.4
-* Bugfix for tuples to properly handle tail pointer poisition.
+* Bugfix for tuples to properly handle tail pointer position.
 # 0.1.3
 * Bugfix for tuples to properly handle head/tail encoding
 # 0.1.2
