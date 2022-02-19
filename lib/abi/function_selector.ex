@@ -268,7 +268,7 @@ defmodule ABI.FunctionSelector do
   def simple_types?([], _item), do: true
 
   def simple_types?([%{"type" => tuple_type, "components" => current_types} | types], item)
-      when tuple_type in ["tuple", "tuple[]"] do
+      when tuple_type in ["tuple", "tuple[]", "tuple[][]"] do
     case simple_types?(current_types, item) do
       true ->
         simple_types?(types, item)
@@ -304,6 +304,11 @@ defmodule ABI.FunctionSelector do
   def parse_specification_type(%{"type" => "tuple[]", "components" => components}) do
     sub_types = for component <- components, do: parse_specification_type(component)
     {:array, {:tuple, sub_types}}
+  end
+
+  def parse_specification_type(%{"type" => "tuple[][]", "components" => components}) do
+    sub_types = for component <- components, do: parse_specification_type(component)
+    {:array, {:array, {:tuple, sub_types}}}
   end
 
   def parse_specification_type(%{

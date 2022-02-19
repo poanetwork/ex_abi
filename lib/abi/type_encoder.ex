@@ -176,11 +176,11 @@ defmodule ABI.TypeEncoder do
     do_encode_type({:uint, 160}, data, static_acc, dynamic_acc)
   end
 
-  defp do_encode_type(type = {:tuple, types}, tuple_parameters, static_acc, dynamic_acc)
+  defp do_encode_type(type = {:tuple, _types}, tuple_parameters, static_acc, dynamic_acc)
        when is_tuple(tuple_parameters) do
     list_parameters = Tuple.to_list(tuple_parameters)
 
-    do_encode_type({:tuple, types}, list_parameters, static_acc, dynamic_acc)
+    do_encode_type(type, list_parameters, static_acc, dynamic_acc)
   end
 
   defp do_encode_type(type = {:tuple, types}, list_parameters, static_acc, dynamic_acc)

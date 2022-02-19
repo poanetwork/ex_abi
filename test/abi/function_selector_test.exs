@@ -69,6 +69,46 @@ defmodule ABI.FunctionSelectorTest do
 
       assert FunctionSelector.parse_specification_type(type) == expected
     end
+
+    test "parses multidimensional tuple array" do
+      abi = %{
+        "constant" => true,
+        "inputs" => [
+          %{
+            "name" => "swaps",
+            "type" => "tuple[][]",
+            "interalType" => "struct ExchangeProxy.Swap[][]",
+            "components" => [
+              %{
+                "name" => "foo",
+                "type" => "uint256"
+              },
+              %{
+                "name" => "bar",
+                "type" => "uint256"
+              }
+            ]
+          }
+        ],
+        "name" => "batchSwapExactOut",
+        "outputs" => [%{"name" => "totalAmountIn", "type" => "uint256"}],
+        "payable" => true,
+        "stateMutability" => "payable",
+        "type" => "function"
+      }
+
+      assert [
+               %ABI.FunctionSelector{
+                 function: "batchSwapExactOut",
+                 input_names: ["swaps"],
+                 inputs_indexed: nil,
+                 method_id: <<33, 173, 158, 39>>,
+                 returns: [uint: 256],
+                 type: :function,
+                 types: [array: {:array, {:tuple, [uint: 256, uint: 256]}}]
+               }
+             ] == ABI.parse_specification([abi])
+    end
   end
 
   describe "parse_specification_item/1" do
