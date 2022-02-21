@@ -1,3 +1,5 @@
+# 0.5.10
+* Support parsing of multidimensional tuples in specs (https://github.com/poanetwork/ex_abi/pull/89)
 # 0.5.9
 * Update jason from 1.2.0 to 1.3.0
 * Update ex_keccak from 0.2.2 to 0.3.0
