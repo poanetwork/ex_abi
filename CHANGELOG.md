@@ -1,3 +1,5 @@
+# 0.5.11
+* Update ex_keccak to 0.4.0 (https://github.com/poanetwork/ex_abi/pull/92)
 # 0.5.10
 * Support parsing of multidimensional tuples in specs (https://github.com/poanetwork/ex_abi/pull/89)
 # 0.5.9
