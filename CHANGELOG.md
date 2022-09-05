@@ -1,3 +1,5 @@
+# 0.5.12
+* Update ex_keccak to 0.6.0 (https://github.com/poanetwork/ex_abi/pull/105)
 # 0.5.11
 * Update ex_keccak to 0.4.0 (https://github.com/poanetwork/ex_abi/pull/92)
 # 0.5.10
