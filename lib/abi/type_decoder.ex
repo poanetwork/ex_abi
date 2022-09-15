@@ -211,7 +211,7 @@ defmodule ABI.TypeDecoder do
     padding_size_in_bytes = total_size_in_bytes - size_in_bytes
 
     <<_padding::binary-size(padding_size_in_bytes), value::binary-size(size_in_bytes),
-      rest::binary()>> = data
+      rest::binary>> = data
 
     {value, rest}
   end
@@ -223,7 +223,7 @@ defmodule ABI.TypeDecoder do
     padding_size_in_bytes = total_size_in_bytes - size_in_bytes
 
     <<value::binary-size(size_in_bytes), _padding::binary-size(padding_size_in_bytes),
-      rest2::binary()>> = full_data
+      rest2::binary>> = full_data
 
     {value, rest2}
   end
@@ -235,7 +235,7 @@ defmodule ABI.TypeDecoder do
     padding_size_in_bytes = total_size_in_bytes - size_in_bytes
 
     <<value::binary-size(size_in_bytes), _padding::binary-size(padding_size_in_bytes),
-      _rest::binary()>> = data
+      _rest::binary>> = data
 
     {value, rest}
   end
