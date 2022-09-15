@@ -4,7 +4,7 @@ defmodule ABI.Mixfile do
   def project do
     [
       app: :ex_abi,
-      version: "0.5.12",
+      version: "0.5.13",
       elixir: "~> 1.8",
       description: "Ethereum's ABI Interface",
       package: [
@@ -32,7 +32,7 @@ defmodule ABI.Mixfile do
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.24", only: :dev, runtime: false},
-      {:jason, "~> 1.3"},
+      {:jason, "~> 1.4"},
       {:ex_keccak, "~> 0.6.0"},
       {:propcheck, "~> 1.4", only: [:test, :dev]}
     ]
