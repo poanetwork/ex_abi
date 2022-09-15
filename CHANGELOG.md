@@ -1,5 +1,5 @@
 # 0.5.13
-* Update jason to 1.4.0 (https://github.com/poanetwork/ex_abi/pull/106)
+* Update jason to 1.4.0 (https://github.com/poanetwork/ex_abi/pull/107)
 # 0.5.12
 * Update ex_keccak to 0.6.0 (https://github.com/poanetwork/ex_abi/pull/105)
 # 0.5.11
