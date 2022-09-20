@@ -105,7 +105,8 @@ defmodule ABI.FunctionSelectorTest do
                  method_id: <<33, 173, 158, 39>>,
                  returns: [uint: 256],
                  type: :function,
-                 types: [array: {:array, {:tuple, [uint: 256, uint: 256]}}]
+                 types: [array: {:array, {:tuple, [uint: 256, uint: 256]}}],
+                 state_mutability: :payable
                }
              ] == ABI.parse_specification([abi])
     end
@@ -341,6 +342,26 @@ defmodule ABI.FunctionSelectorTest do
       selector = FunctionSelector.parse_specification_item(function)
 
       assert expected_type == selector.types
+    end
+
+    test "with stateMutability set" do
+      ~w(pure view nonPayable payable)
+      |> Enum.zip(~w(pure view non_payable payable)a)
+      |> Enum.each(fn {state_mutability, state_mutability_atom} ->
+        function = %{
+          "inputs" => [
+            %{"internalType" => "uint160[]", "name" => "exitIds", "type" => "uint160[]"}
+          ],
+          "name" => "standardExits",
+          "outputs" => [],
+          "payable" => false,
+          "stateMutability" => state_mutability,
+          "type" => "function"
+        }
+
+        assert %FunctionSelector{state_mutability: ^state_mutability_atom} =
+                 FunctionSelector.parse_specification_item(function)
+      end)
     end
   end
 
