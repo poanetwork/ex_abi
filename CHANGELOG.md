@@ -1,3 +1,6 @@
+# 0.5.14
+* Add state_mutability to ABI.FunctionSelector (https://github.com/poanetwork/ex_abi/pull/109)
+* Fix dialyzer, credo warnings (https://github.com/poanetwork/ex_abi/pull/110)
 # 0.5.13
 * Update jason to 1.4.0 (https://github.com/poanetwork/ex_abi/pull/107)
 # 0.5.12
