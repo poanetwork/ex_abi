@@ -5,7 +5,11 @@ defmodule ABI do
   it to or from types that Solidity understands.
   """
 
-  alias ABI.{FunctionSelector, Parser, TypeEncoder, TypeDecoder, Util}
+  alias ABI.FunctionSelector
+  alias ABI.Parser
+  alias ABI.TypeDecoder
+  alias ABI.TypeEncoder
+  alias ABI.Util
 
   @doc """
   Encodes the given data into the function signature or tuple signature.
@@ -196,8 +200,7 @@ defmodule ABI do
     else
       doc
       |> Enum.map(&FunctionSelector.parse_specification_item/1)
-      |> Enum.reject(&is_nil/1)
-      |> Enum.reject(&(&1.type == :event))
+      |> Enum.reject(fn item -> is_nil(item) || item.type == :event end)
     end
   end
 end

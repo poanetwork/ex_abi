@@ -247,7 +247,6 @@ defmodule ABI.TypeEncoder do
     n < :math.pow(2, max_bits - 1) * -1 + 1 || n > :math.pow(2, max_bits - 1) - 1
   end
 
-  # TODO change to ExthCrypto.Math.mod when it's fixed ( mod(-75,32) == 21 )
   def mod(x, n) do
     remainder = rem(x, n)
 
@@ -257,7 +256,6 @@ defmodule ABI.TypeEncoder do
   end
 
   defp pad(bin, size_in_bytes, direction) do
-    # TODO: Create `left_pad` repo, err, add to `ExthCrypto.Math`
     total_size = size_in_bytes + mod(32 - size_in_bytes, 32)
     padding_size_bits = (total_size - byte_size(bin)) * 8
     padding = <<0::size(padding_size_bits)>>
