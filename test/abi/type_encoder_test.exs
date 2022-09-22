@@ -1,7 +1,9 @@
 defmodule ABI.TypeEncoderTest do
   use ExUnit.Case, async: true
 
-  alias ABI.{TypeDecoder, TypeEncoder, FunctionSelector}
+  alias ABI.FunctionSelector
+  alias ABI.TypeDecoder
+  alias ABI.TypeEncoder
 
   doctest ABI.TypeEncoder
 

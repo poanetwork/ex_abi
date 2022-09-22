@@ -3,7 +3,9 @@ defmodule ABI.TypeDecoderTest do
 
   doctest ABI.TypeDecoder
 
-  alias ABI.{TypeDecoder, TypeEncoder, FunctionSelector}
+  alias ABI.FunctionSelector
+  alias ABI.TypeDecoder
+  alias ABI.TypeEncoder
 
   describe "decode" do
     test "successfully decodes positives and negatives integers" do

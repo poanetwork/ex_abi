@@ -1,4 +1,6 @@
 defmodule ABI.Util do
+  @moduledoc false
+
   def split_method_id(<<method_id::binary-size(4), rest::binary>>) do
     {:ok, method_id, rest}
   end

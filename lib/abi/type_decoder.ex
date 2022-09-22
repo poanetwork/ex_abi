@@ -240,8 +240,6 @@ defmodule ABI.TypeDecoder do
     {value, rest}
   end
 
-  @spec decode_type(FunctionSelector.type(), binary(), binary()) ::
-          {any(), binary(), binary()}
   defp decode_type({:uint, size_in_bits}, data) do
     decode_uint(data, size_in_bits)
   end
@@ -295,10 +293,6 @@ defmodule ABI.TypeDecoder do
       end
 
     {value, rest}
-  end
-
-  defp decode_type(:string, data) do
-    decode_type(:bytes, data)
   end
 
   defp decode_type({:array, type}, data, full_data) do
