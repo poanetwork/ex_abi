@@ -3,8 +3,8 @@ defmodule ABI.Event do
   Tools for decoding event data and topics given a list of function selectors.
   """
 
-  alias ABI.Util
   alias ABI.FunctionSelector
+  alias ABI.Util
 
   @type topic :: binary | nil
 
