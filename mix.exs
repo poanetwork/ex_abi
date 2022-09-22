@@ -40,7 +40,7 @@ defmodule ABI.Mixfile do
 
   defp dialyzer do
     [
-      flags: [:error_handling, :race_conditions, :underspecs, :unknown, :unmatched_returns]
+      flags: [:error_handling, :underspecs, :unknown, :unmatched_returns]
     ]
   end
 end
