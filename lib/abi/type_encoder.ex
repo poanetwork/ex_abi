@@ -200,7 +200,7 @@ defmodule ABI.TypeEncoder do
     pad(bytes, byte_size(bytes), :right)
   end
 
-  @spec encode_method_id(%FunctionSelector{}) :: binary()
+  @spec encode_method_id(FunctionSelector.t()) :: binary()
   defp encode_method_id(%FunctionSelector{function: nil}), do: ""
 
   defp encode_method_id(function_selector) do
