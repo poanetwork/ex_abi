@@ -40,6 +40,7 @@ defmodule ABI.FunctionSelector do
           types: [type],
           returns: [type],
           type: :event | :function | :constructor | :error,
+          state_mutability: :pure | :view | :non_payable | :payable | nil,
           inputs_indexed: [boolean]
         }
 
@@ -48,6 +49,7 @@ defmodule ABI.FunctionSelector do
     :method_id,
     :type,
     :inputs_indexed,
+    :state_mutability,
     input_names: [],
     types: [],
     returns: []
@@ -65,6 +67,13 @@ defmodule ABI.FunctionSelector do
     "string",
     "tuple"
   ]
+
+  @state_mutability %{
+    "pure" => :pure,
+    "view" => :view,
+    "nonPayable" => :non_payable,
+    "payable" => :payable
+  }
 
   @doc """
   Decodes a function selector to a struct.
@@ -181,6 +190,7 @@ defmodule ABI.FunctionSelector do
         types: input_types,
         returns: output_types,
         input_names: input_names,
+        state_mutability: @state_mutability[item["stateMutability"]],
         type: :function
       }
 
