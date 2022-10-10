@@ -345,7 +345,7 @@ defmodule ABI.FunctionSelectorTest do
     end
 
     test "with stateMutability set" do
-      ~w(pure view nonPayable payable)
+      ~w(pure view nonpayable payable)
       |> Enum.zip(~w(pure view non_payable payable)a)
       |> Enum.each(fn {state_mutability, state_mutability_atom} ->
         function = %{
