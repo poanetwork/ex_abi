@@ -118,7 +118,7 @@ defmodule ABI do
       ...> |> Jason.decode!
       ...> |> ABI.parse_specification
       ...> |> ABI.find_and_decode("b85d0bd200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001" |> Base.decode16!(case: :lower))
-      {%ABI.FunctionSelector{type: :function, function: "bark", input_names: ["at", "loudly"], method_id: <<184, 93, 11, 210>>, returns: [], types: [:address, :bool]}, [<<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1>>, true]}
+      {%ABI.FunctionSelector{type: :function, function: "bark", input_names: ["at", "loudly"], method_id: <<184, 93, 11, 210>>, returns: [], types: [:address, :bool], state_mutability: :non_payable}, [<<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1>>, true]}
   """
   def find_and_decode(function_selectors, data, data_type \\ :input) do
     with {:ok, method_id, _rest} <- Util.split_method_id(data),
@@ -145,8 +145,8 @@ defmodule ABI do
       iex> File.read!("priv/dog.abi.json")
       ...> |> Jason.decode!
       ...> |> ABI.parse_specification
-      [%ABI.FunctionSelector{type: :function, function: "bark", input_names: ["at", "loudly"], method_id: <<184, 93, 11, 210>>, returns: [], types: [:address, :bool]},
-       %ABI.FunctionSelector{type: :function, function: "rollover", method_id: <<176, 86, 180, 154>>, returns: [:bool], types: []}]
+      [%ABI.FunctionSelector{type: :function, function: "bark", input_names: ["at", "loudly"], method_id: <<184, 93, 11, 210>>, returns: [], types: [:address, :bool], state_mutability: :non_payable},
+       %ABI.FunctionSelector{type: :function, function: "rollover", method_id: <<176, 86, 180, 154>>, returns: [:bool], types: [], state_mutability: :non_payable}]
 
       iex> [%{
       ...>   "constant" => true,
@@ -161,7 +161,7 @@ defmodule ABI do
       ...>   "type" => "function"
       ...> }]
       ...> |> ABI.parse_specification
-      [%ABI.FunctionSelector{type: :function, function: "bark", method_id: <<184, 93, 11, 210>>, input_names: ["at", "loudly"], returns: [], types: [:address, :bool]}]
+      [%ABI.FunctionSelector{type: :function, function: "bark", method_id: <<184, 93, 11, 210>>, input_names: ["at", "loudly"], returns: [], types: [:address, :bool], state_mutability: :non_payable}]
 
       iex> [%{
       ...>   "inputs" => [

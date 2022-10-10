@@ -68,10 +68,10 @@ defmodule ABI.FunctionSelector do
     "tuple"
   ]
 
-  @state_mutability %{
+  @state_mutabilities %{
     "pure" => :pure,
     "view" => :view,
-    "nonPayable" => :non_payable,
+    "nonpayable" => :non_payable,
     "payable" => :payable
   }
 
@@ -190,7 +190,7 @@ defmodule ABI.FunctionSelector do
         types: input_types,
         returns: output_types,
         input_names: input_names,
-        state_mutability: @state_mutability[item["stateMutability"]],
+        state_mutability: @state_mutabilities[item["stateMutability"]],
         type: :function
       }
 
