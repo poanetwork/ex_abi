@@ -67,11 +67,12 @@ defmodule ABI.Event do
   @spec find_and_decode([FunctionSelector.t()], topic, topic, topic, topic, binary) ::
           {FunctionSelector.t(), [event_value]} | {:error, any}
   def find_and_decode(function_selectors, topic1, topic2, topic3, topic4, data) do
+    input_topics = [topic2, topic3, topic4]
+    topics_length = Enum.count(input_topics, fn x -> x != nil end)
+
     with {:ok, method_id, _rest} <- Util.split_method_id(topic1),
          {:ok, selector} when not is_nil(selector) <-
-           Util.find_selector_by_method_id(function_selectors, method_id) do
-      input_topics = [topic2, topic3, topic4]
-
+           Util.find_selector_by_event_id(function_selectors, method_id, topics_length) do
       args = Enum.zip([selector.input_names, selector.types, selector.inputs_indexed])
 
       {indexed_args, unindexed_args} =

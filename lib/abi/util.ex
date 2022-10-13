@@ -21,4 +21,24 @@ defmodule ABI.Util do
       {:error, :no_matching_function}
     end
   end
+
+  def find_selector_by_event_id(function_selectors, method_id_target, topics_length) do
+    # Only process function selectors that are of type event
+    function_selector =
+      Enum.find(function_selectors, fn
+        %{type: :event, method_id: ^method_id_target, inputs_indexed: inputs_indexed} ->
+          # match the length of topics and indexed_args_length
+          indexed_length = Enum.count(inputs_indexed, &(&1 == true))
+          topics_length == indexed_length
+
+        _ ->
+          false
+      end)
+
+    if function_selector do
+      {:ok, function_selector}
+    else
+      {:error, :no_matching_function}
+    end
+  end
 end
