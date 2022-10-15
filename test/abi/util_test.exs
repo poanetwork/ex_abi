@@ -21,6 +21,16 @@ defmodule ABI.UtilTest do
       input_names: ["from", "to", "tokenId"],
       types: [:address, :address, {:uint, 256}],
       returns: []
+    },
+    %ABI.FunctionSelector{
+      function: "OwnershipTransferred",
+      method_id: <<139, 224, 7, 156>>,
+      type: :event,
+      inputs_indexed: [true, true],
+      state_mutability: nil,
+      input_names: ["previousOwner", "newOwner"],
+      types: [:address, :address],
+      returns: []
     }
   ]
 
@@ -38,6 +48,20 @@ defmodule ABI.UtilTest do
 
       assert selector.function == "Transfer"
       assert selector.inputs_indexed == [true, true, true]
+    end
+
+    test "decode OwnershipTransferred event" do
+      {:ok, selector} =
+        ABI.Util.find_selector_by_event_id(@selectors, <<139, 224, 7, 156>>, [
+          <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0>>,
+          <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 79, 181, 74, 58, 157, 2, 63, 219, 87, 69, 216,
+            158, 228, 106, 170, 82, 18, 171, 87, 125>>,
+          nil
+        ])
+
+      assert selector.function == "OwnershipTransferred"
+      assert selector.inputs_indexed == [true, true]
     end
   end
 end
