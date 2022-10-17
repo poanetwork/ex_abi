@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.5.16
+* Handle Events with the same hash properly (https://github.com/poanetwork/ex_abi/pull/115)
 ## 0.5.15
 * Fix case typo in nonpayable state mutability (https://github.com/poanetwork/ex_abi/pull/113)
 ## 0.5.14
