@@ -436,6 +436,10 @@ defmodule ABI.FunctionSelector do
     "(#{Enum.join(encoded_types, ",")})"
   end
 
+  defp get_type({:named, type, _name}) do
+    get_type(type)
+  end
+
   defp get_type(els), do: raise("Unsupported type: #{inspect(els)}")
 
   @doc false
@@ -445,6 +449,7 @@ defmodule ABI.FunctionSelector do
   def is_dynamic?({:array, _type}), do: true
   def is_dynamic?({:array, type, len}) when len > 0, do: is_dynamic?(type)
   def is_dynamic?({:tuple, types}), do: Enum.any?(types, &is_dynamic?/1)
+  def is_dynamic?({:named, type, _}), do: is_dynamic?(type)
   def is_dynamic?(_), do: false
 
   @doc false
