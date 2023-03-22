@@ -1,4 +1,8 @@
 # Changelog
+## 0.6.0
+* Use precompiled version of ex_keccak NIF (https://github.com/poanetwork/ex_abi/pull/127)
+
+Rust is not required anymore
 
 ## 0.5.16
 * Handle Events with the same hash properly (https://github.com/poanetwork/ex_abi/pull/115)
