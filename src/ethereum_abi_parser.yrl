@@ -49,7 +49,6 @@ type -> typename digits letters digits :
   double_juxt_type(list_to_atom(v('$1')), v('$3'), list_to_integer(v('$2')), list_to_integer(v('$4'))).
 type -> tuple : '$1'.
 
-
 Erlang code.
 
 v({_Token, _Line, Value}) -> Value.
@@ -62,6 +61,7 @@ plain_type(bytes) -> bytes;
 plain_type(int) -> juxt_type(int, 256);
 plain_type(uint) -> juxt_type(uint, 256);
 plain_type(tuple) -> tuple;
+plain_type(enum) -> juxt_type(uint, 8);
 plain_type(fixed) -> double_juxt_type(fixed, x, 128, 19);
 plain_type(ufixed) -> double_juxt_type(ufixed, x, 128, 19).
 
