@@ -3,7 +3,7 @@ Definitions.
 INT        = [0-9]+
 LETTERS    = [a-zA-Z_]+
 WHITESPACE = [\s\t\n\r]
-TYPES      = uint|int|address|bool|fixed|uint|ufixed|bytes|function|string|tuple
+TYPES      = uint|int|address|bool|fixed|uint|ufixed|bytes|function|string|tuple|enum
 
 Rules.
 
