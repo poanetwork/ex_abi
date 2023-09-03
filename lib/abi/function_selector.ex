@@ -284,7 +284,7 @@ defmodule ABI.FunctionSelector do
         simple_types?(types, item)
 
       false ->
-        Logger.warn("Can not parse #{inspect(item)} because it contains complex types")
+        Logger.warning("Can not parse #{inspect(item)} because it contains complex types")
         false
     end
   end
@@ -300,7 +300,7 @@ defmodule ABI.FunctionSelector do
         simple_types?(types, item)
 
       false ->
-        Logger.warn("Can not parse #{inspect(item)} because it contains complex types")
+        Logger.warning("Can not parse #{inspect(item)} because it contains complex types")
         false
     end
   end
