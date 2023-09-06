@@ -3,7 +3,6 @@
 ## 0.6.1
 * Support the enum solidity type (https://github.com/poanetwork/ex_abi/pull/135)
 * Use `Logger.warning` instead of `Logger.warn` (https://github.com/poanetwork/ex_abi/pull/144)
-* Update ex_keccak - to be released (https://github.com/tzumby/ex_keccak/pull/39, https://github.com/tzumby/ex_keccak/pull/40)
 ## 0.6.0
 * Use precompiled version of ex_keccak NIF (https://github.com/poanetwork/ex_abi/pull/127)
 
