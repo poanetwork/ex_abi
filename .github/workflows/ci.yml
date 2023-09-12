@@ -22,6 +22,10 @@ jobs:
               elixir: '1.14'
               otp: '25.3'
             lint: lint
+          - pair:
+              elixir: '1.15'
+              otp: '26.0'
+            lint: lint
 
     runs-on: ubuntu-latest
 
