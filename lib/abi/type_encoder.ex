@@ -67,10 +67,7 @@ defmodule ABI.TypeEncoder do
         {new_static_acc, new_prefix_size}
       end)
 
-    (complete_static_part ++ dynamic_acc)
-    |> Enum.reduce(<<>>, fn part, acc ->
-      acc <> part
-    end)
+    Enum.join(complete_static_part ++ dynamic_acc)
   end
 
   defp do_encode(

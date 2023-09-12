@@ -29,11 +29,11 @@ defmodule ABI.Mixfile do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.24", only: :dev, runtime: false},
       {:jason, "~> 1.4"},
-      {:ex_keccak, "~> 0.7.1"},
+      {:ex_keccak, "~> 0.7.3"},
       {:propcheck, "~> 1.4", only: [:test, :dev]}
     ]
   end
