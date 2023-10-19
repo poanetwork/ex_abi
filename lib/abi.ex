@@ -146,7 +146,7 @@ defmodule ABI do
       ...> |> Jason.decode!
       ...> |> ABI.parse_specification
       [%ABI.FunctionSelector{type: :function, function: "bark", input_names: ["at", "loudly"], method_id: <<184, 93, 11, 210>>, returns: [], types: [:address, :bool], state_mutability: :non_payable},
-       %ABI.FunctionSelector{type: :function, function: "rollover", method_id: <<176, 86, 180, 154>>, returns: [:bool], types: [], state_mutability: :non_payable}]
+       %ABI.FunctionSelector{type: :function, function: "rollover", method_id: <<176, 86, 180, 154>>, returns: [:bool], return_names: ["is_a_good_boy"], types: [], state_mutability: :non_payable}]
 
       iex> [%{
       ...>   "constant" => true,

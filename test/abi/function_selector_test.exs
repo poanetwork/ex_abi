@@ -104,6 +104,7 @@ defmodule ABI.FunctionSelectorTest do
                  inputs_indexed: nil,
                  method_id: <<33, 173, 158, 39>>,
                  returns: [uint: 256],
+                 return_names: ["totalAmountIn"],
                  type: :function,
                  types: [array: {:array, {:tuple, [uint: 256, uint: 256]}}],
                  state_mutability: :payable

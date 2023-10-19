@@ -111,6 +111,7 @@ defmodule ABITest do
           input_names: ["foo"],
           types: [{:uint, 256}],
           returns: [{:array, {:uint, 256}, 6}, :bool, {:array, {:uint, 256}, 3}, :string],
+          return_names: ["foo", "bar", "baz", "buz"],
           method_id: <<245, 72, 246, 70>>
         },
         %FunctionSelector{
@@ -118,6 +119,7 @@ defmodule ABITest do
           function: "baz",
           types: [],
           returns: [{:tuple, [{:uint, 256}, {:uint, 256}]}, :string],
+          return_names: ["", ""],
           method_id: <<167, 145, 111, 172>>
         },
         %FunctionSelector{
@@ -126,6 +128,7 @@ defmodule ABITest do
           input_names: ["foo", "bar", "baz"],
           types: [:bytes, :bool, {:array, {:uint, 256}}],
           returns: [{:tuple, [{:uint, 256}, {:uint, 256}]}, :string],
+          return_names: ["", ""],
           method_id: <<165, 100, 59, 242>>
         }
       ]
