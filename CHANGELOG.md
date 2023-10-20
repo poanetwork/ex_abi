@@ -1,6 +1,8 @@
 # Changelog
 
 ## 0.6.2
+* Add return_names to the FunctionSelector struct (https://github.com/poanetwork/ex_abi/pull/151)
+## 0.6.2
 * Update ex_keccak to 0.7.3 (https://github.com/poanetwork/ex_abi/pull/146)
 ## 0.6.1
 * Support the enum solidity type (https://github.com/poanetwork/ex_abi/pull/135)
