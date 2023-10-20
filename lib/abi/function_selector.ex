@@ -28,6 +28,7 @@ defmodule ABI.FunctionSelector do
   * `:function` - Name of the function
   * `:types` - Function's input types
   * `:returns` - Function's return types
+  * `:return_names` - Names of the return values (output names)
   * `:method_id` - First four bits of the hashed function signature
   * `:input_names` - Names of the input values (argument names)
   * `:type` - The type of the selector. Events are part of the ABI, but are not considered functions
@@ -39,6 +40,7 @@ defmodule ABI.FunctionSelector do
           input_names: [String.t()],
           types: [type],
           returns: [type],
+          return_names: [String.t()],
           type: :event | :function | :constructor | :error,
           state_mutability: :pure | :view | :non_payable | :payable | nil,
           inputs_indexed: [boolean]
@@ -52,7 +54,8 @@ defmodule ABI.FunctionSelector do
     :state_mutability,
     input_names: [],
     types: [],
-    returns: []
+    returns: [],
+    return_names: []
   ]
 
   @simple_types [
@@ -184,11 +187,13 @@ defmodule ABI.FunctionSelector do
       input_names = Enum.map(named_inputs, &Map.get(&1, "name"))
 
       output_types = Enum.map(named_outputs, &parse_specification_type/1)
+      output_names = Enum.map(named_outputs, &Map.get(&1, "name"))
 
       selector = %ABI.FunctionSelector{
         function: function_name,
         types: input_types,
         returns: output_types,
+        return_names: output_names,
         input_names: input_names,
         state_mutability: @state_mutabilities[item["stateMutability"]],
         type: :function
@@ -268,6 +273,7 @@ defmodule ABI.FunctionSelector do
       input_names: [],
       types: [],
       returns: [],
+      return_names: [],
       type: :function
     }
   end
