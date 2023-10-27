@@ -58,7 +58,33 @@ defmodule ABI do
   end
 
   def encode(%FunctionSelector{} = function_selector, data, data_type) do
-    TypeEncoder.encode(data, function_selector, data_type)
+    TypeEncoder.encode(data, function_selector, data_type, :standard)
+  end
+
+  @doc """
+  Encodes the given data into the given types in packed encoding mode.
+
+  Note that packed encoding mode is ambiguous and cannot be decoded (there are no decode_packed functions).
+  Also, tuples (structs) and nester arrays are not supported.
+
+  More info https://docs.soliditylang.org/en/latest/abi-spec.html#non-standard-packed-mode
+
+  ## Examples
+
+      iex> ABI.encode_packed([{:uint, 16}], [0x12])
+      ...> |> Base.encode16(case: :lower)
+      "0012"
+
+      iex> ABI.encode_packed([:string, {:uint, 16}], ["Elixir ABI", 0x12])
+      ...> |> Base.encode16(case: :lower)
+      "456c69786972204142490012"
+
+      iex> ABI.encode_packed([{:int, 16}, {:bytes, 1}, {:uint, 16}, :string], [-1, <<0x42>>, 0x03, "Hello, world!"])
+      ...> |> Base.encode16(case: :lower)
+      "ffff42000348656c6c6f2c20776f726c6421"
+  """
+  def encode_packed(types, data) when is_list(types) do
+    TypeEncoder.encode(data, types, :input, :packed)
   end
 
   @doc """

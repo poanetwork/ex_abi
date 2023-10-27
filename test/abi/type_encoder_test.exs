@@ -408,6 +408,67 @@ defmodule ABI.TypeEncoderTest do
 
       assert ABI.TypeDecoder.decode(expected_result, selector) == params
     end
+
+    test "encodes bytes without padding in packed mode" do
+      assert <<0, 1, 2>> == ABI.TypeEncoder.encode([<<0, 1, 2>>], [:bytes], :input, :packed)
+      assert "Hello" == ABI.TypeEncoder.encode(["Hello"], [:string], :input, :packed)
+    end
+
+    test "encodes types smaller than 256 bits without padding in packed mode" do
+      for size <- 8..256//8 do
+        value = Enum.random(1..255)
+
+        assert <<value::unsigned-size(size)>> ==
+                 ABI.TypeEncoder.encode([value], [{:uint, size}], :input, :packed)
+
+        value = Enum.random(-128..127)
+
+        assert <<value::signed-size(size)>> ==
+                 ABI.TypeEncoder.encode([value], [{:int, size}], :input, :packed)
+      end
+    end
+
+    test "encodes bool as one byte in packed mode" do
+      assert <<1>> == ABI.TypeEncoder.encode([true], [:bool], :input, :packed)
+      assert <<0>> == ABI.TypeEncoder.encode([false], [:bool], :input, :packed)
+    end
+
+    test "encodes arrays with padding in packed mode" do
+      assert ABI.TypeEncoder.encode([[1, 2, 3]], [{:array, {:uint, 8}}]) ==
+               "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003"
+               |> Base.decode16!(case: :lower)
+    end
+
+    test "encodes address in 20 bytes in packed mode" do
+      encoded =
+        ABI.TypeEncoder.encode(
+          [
+            <<192, 42, 170, 57, 178, 35, 254, 141, 10, 14, 92, 79, 39, 234, 217, 8, 60, 117, 108,
+              194>>
+          ],
+          [:address],
+          :input,
+          :packed
+        )
+
+      assert byte_size(encoded) == 20
+    end
+
+    test "raises with tuple in packed mode" do
+      data_to_encode = [{128, 64}]
+
+      selector = %FunctionSelector{
+        function: "baz",
+        types: [
+          {:tuple, [{:int, 8}, {:int, 8}]}
+        ],
+        returns: :bool
+      }
+
+      assert_raise RuntimeError, fn ->
+        ABI.TypeEncoder.encode(data_to_encode, selector, :input, :packed)
+      end
+    end
   end
 
   test "example 1 from web3-eth-abi js" do
