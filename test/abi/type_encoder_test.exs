@@ -35,7 +35,7 @@ defmodule ABI.TypeEncoderTest do
       assert TypeDecoder.decode(expected_result, selector) == params
     end
 
-    test "encodes [{:int, 25}, :bool]" do
+    test "encodes [{:int, 256}, :bool]" do
       selector = %FunctionSelector{
         function: "baz",
         method_id: <<215, 174, 202, 43>>,
