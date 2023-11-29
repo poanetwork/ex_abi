@@ -260,7 +260,7 @@ defmodule ABI.FunctionSelector do
         type: :event
       }
 
-      add_method_id(selector)
+      add_event_id(selector)
     else
       _ -> nil
     end
@@ -409,6 +409,18 @@ defmodule ABI.FunctionSelector do
     case ExKeccak.hash_256(signature) do
       <<method_id::binary-size(4), _::binary>> ->
         %{selector | method_id: method_id}
+
+      _ ->
+        selector
+    end
+  end
+
+  defp add_event_id(selector) do
+    signature = encode(selector)
+
+    case ExKeccak.hash_256(signature) do
+      <<event_id::binary-size(32)>> ->
+        %{selector | method_id: event_id}
 
       _ ->
         selector

@@ -54,7 +54,7 @@ defmodule ABI.Event do
           function: "WantsPets",
           input_names: ["_from_human", "_number", "_belly"],
           inputs_indexed: [true, false, true],
-          method_id: <<235, 155, 60, 76>>,
+          method_id: <<235, 155, 60, 76, 236, 41, 90, 133, 158, 131, 71, 199, 88, 206, 85, 83, 36, 105, 140, 112, 231, 125, 249, 63, 87, 99, 121, 242, 184, 82, 161, 19>>,
           types: [:string, {:uint, 256}, :bool]
         },
         [
@@ -69,9 +69,8 @@ defmodule ABI.Event do
   def find_and_decode(function_selectors, topic1, topic2, topic3, topic4, data) do
     input_topics = [topic2, topic3, topic4]
 
-    with {:ok, method_id, _rest} <- Util.split_method_id(topic1),
-         {:ok, selector} when not is_nil(selector) <-
-           Util.find_selector_by_event_id(function_selectors, method_id, input_topics) do
+    with {:ok, selector} when not is_nil(selector) <-
+           Util.find_selector_by_event_id(function_selectors, topic1, input_topics) do
       args = Enum.zip([selector.input_names, selector.types, selector.inputs_indexed])
 
       {indexed_args, unindexed_args} =
