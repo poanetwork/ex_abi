@@ -29,14 +29,14 @@ defmodule ABI.FunctionSelector do
   * `:types` - Function's input types
   * `:returns` - Function's return types
   * `:return_names` - Names of the return values (output names)
-  * `:method_id` - First four bits of the hashed function signature
+  * `:method_id` - First four bytes of the hashed function signature or full 32 byte hash for events
   * `:input_names` - Names of the input values (argument names)
   * `:type` - The type of the selector. Events are part of the ABI, but are not considered functions
   * `:inputs_index` - A list of true/false values denoting if each input is indexed. Only populated for events.
   """
   @type t :: %__MODULE__{
           function: String.t() | nil,
-          method_id: String.t() | nil,
+          method_id: binary | nil,
           input_names: [String.t()],
           types: [type],
           returns: [type],
@@ -418,13 +418,7 @@ defmodule ABI.FunctionSelector do
   defp add_event_id(selector) do
     signature = encode(selector)
 
-    case ExKeccak.hash_256(signature) do
-      <<event_id::binary-size(32)>> ->
-        %{selector | method_id: event_id}
-
-      _ ->
-        selector
-    end
+    %{selector | method_id: ExKeccak.hash_256(signature)}
   end
 
   defp get_types(function_selector) do
