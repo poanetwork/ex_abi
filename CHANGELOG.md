@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.7.0
+* Store 32 byte even signatures instead of 4 bytes (https://github.com/poanetwork/ex_abi/pull/157)
 ## 0.6.4
 * Implement Packed encoding (https://github.com/poanetwork/ex_abi/pull/154)
 ## 0.6.3
