@@ -212,7 +212,7 @@ defmodule ABI do
       ...> |> Jason.decode!
       ...> |> ABI.parse_specification(include_events?: true)
       ...> |> Enum.filter(&(&1.type == :event))
-      [%ABI.FunctionSelector{type: :event, function: "WantsPets", input_names: ["_from_human", "_number", "_belly"], inputs_indexed: [true, false, true], method_id: <<235, 155, 60, 76>>, types: [:string, {:uint, 256}, :bool]}]
+      [%ABI.FunctionSelector{type: :event, function: "WantsPets", input_names: ["_from_human", "_number", "_belly"], inputs_indexed: [true, false, true], method_id: <<235, 155, 60, 76, 236, 41, 90, 133, 158, 131, 71, 199, 88, 206, 85, 83, 36, 105, 140, 112, 231, 125, 249, 63, 87, 99, 121, 242, 184, 82, 161, 19>>, types: [:string, {:uint, 256}, :bool]}]
 
       iex> File.read!("priv/example1.abi.json")
       ...> |> Jason.decode!
