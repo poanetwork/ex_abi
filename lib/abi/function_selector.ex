@@ -311,34 +311,25 @@ defmodule ABI.FunctionSelector do
     end
   end
 
-  @doc false
-  def parse_specification_type(%{"type" => "tuple", "components" => components}) do
-    sub_types = for component <- components, do: parse_specification_type(component)
+  def replace_tuple({:array, inner}, sub_types) do
+    {:array, replace_tuple(inner, sub_types)}
+  end
+
+  def replace_tuple({:array, inner, size}, sub_types) do
+    {:array, replace_tuple(inner, sub_types), size}
+  end
+
+  def replace_tuple(:tuple, sub_types) do
     {:tuple, sub_types}
   end
 
-  def parse_specification_type(%{"type" => "tuple[]", "components" => components}) do
-    sub_types = for component <- components, do: parse_specification_type(component)
-    {:array, {:tuple, sub_types}}
+  def replace_tuple(other, _) do
+    other
   end
 
-  def parse_specification_type(%{"type" => "tuple[][]", "components" => components}) do
+  def parse_specification_type(%{"type" => "tuple" <> _ = type, "components" => components}) do
     sub_types = for component <- components, do: parse_specification_type(component)
-    {:array, {:array, {:tuple, sub_types}}}
-  end
-
-  def parse_specification_type(%{
-        "type" => "tuple[" <> tail,
-        "components" => components
-      }) do
-    sub_types = for component <- components, do: parse_specification_type(component)
-
-    size =
-      tail
-      |> String.replace("]", "")
-      |> String.to_integer()
-
-    {:array, {:tuple, sub_types}, size}
+    decode_type(type) |> replace_tuple(sub_types)
   end
 
   def parse_specification_type(%{"type" => type}), do: decode_type(type)
