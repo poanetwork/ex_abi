@@ -180,7 +180,11 @@ defmodule ABI.FunctionSelector do
            "name" => function_name,
            "inputs" => named_inputs,
            "outputs" => named_outputs
-         } <- item,
+         } <-
+           item
+           # Workaround for missing "outputs" field.
+           # This is a fix for https://github.com/poanetwork/ex_abi/issues/162
+           |> Map.put_new("outputs", []),
          true <- simple_types?(named_inputs, item),
          true <- simple_types?(named_outputs, item) do
       input_types = Enum.map(named_inputs, &parse_specification_type/1)
