@@ -111,6 +111,43 @@ defmodule ABI.FunctionSelectorTest do
                }
              ] == ABI.parse_specification([abi])
     end
+
+    @doc """
+    Regression test to verify the correct parsing of ABIs that lack the
+    "outputs" field.
+    """
+    test "with the missing outputs field" do
+      abi = [
+        %{
+          "type" => "function",
+          "stateMutability" => "view",
+          "name" => "assumeLastTokenIdMatches",
+          "inputs" => [
+            %{
+              "type" => "uint256",
+              "name" => "lastTokenId",
+              "internalType" => "uint256"
+            }
+          ]
+        }
+      ]
+
+      expected = [
+        %FunctionSelector{
+          type: :function,
+          function: "assumeLastTokenIdMatches",
+          input_names: ["lastTokenId"],
+          types: [uint: 256],
+          returns: [],
+          return_names: [],
+          method_id: <<231, 40, 120, 180>>,
+          inputs_indexed: nil,
+          state_mutability: :view
+        }
+      ]
+
+      assert ABI.parse_specification(abi) == expected
+    end
   end
 
   describe "parse_specification_item/1" do
