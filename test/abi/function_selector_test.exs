@@ -113,7 +113,8 @@ defmodule ABI.FunctionSelectorTest do
     end
 
     @doc """
-    Regression test for issue #162 (https://github.com/poanetwork/ex_abi/issues/162).
+    Regression test to verify the correct parsing of ABIs that lack the
+    "outputs" field.
     """
     test "with the missing outputs field" do
       abi = [
