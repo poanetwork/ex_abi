@@ -193,7 +193,7 @@ defmodule ABI.TypeEncoder do
     types = List.duplicate(type, size)
     result = do_encode(data, types, mode)
 
-    if FunctionSelector.is_dynamic?(type) do
+    if FunctionSelector.dynamic?(type) do
       data_bytes_size = byte_size(result)
 
       {[{:dynamic, data_bytes_size} | static_acc], [result | dynamic_acc]}
@@ -227,7 +227,7 @@ defmodule ABI.TypeEncoder do
        when is_list(list_parameters) do
     result = do_encode(list_parameters, types, :standard)
 
-    if FunctionSelector.is_dynamic?(type) do
+    if FunctionSelector.dynamic?(type) do
       data_bytes_size = byte_size(result)
 
       {[{:dynamic, data_bytes_size} | static_acc], [result | dynamic_acc]}

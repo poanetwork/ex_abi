@@ -91,7 +91,7 @@ defmodule ABI.Event do
 
   defp indexed_arg_values([{_, type, _} | rest_args], [topic | rest_topics], acc) do
     value =
-      if ABI.FunctionSelector.is_dynamic?(type) do
+      if ABI.FunctionSelector.dynamic?(type) do
         {bytes, _} = ABI.TypeDecoder.decode_bytes(topic, 32, :left)
 
         # This is explained in the docstring. The caller will almost certainly
