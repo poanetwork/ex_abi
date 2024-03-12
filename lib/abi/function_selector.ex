@@ -182,28 +182,8 @@ defmodule ABI.FunctionSelector do
            "outputs" => named_outputs
          } <-
            item
-           # Workaround for ABIs that are missing the "outputs" field.
-           #
-           # For instance, consider this valid ABI:
-           #
-           # ```jsonc
-           # // ...
-           #     {
-           #         "type": "function",
-           #         "stateMutability": "view",
-           #         "name": "assumeLastTokenIdMatches",
-           #         "inputs": [
-           #             {
-           #                 "type": "uint256",
-           #                 "name": "lastTokenId",
-           #                 "internalType": "uint256"
-           #             }
-           #         ]
-           #     },
-           # // ...
-           # ```
-           # If the "outputs" field is missing, we should assume it's an empty
-           # list to continue parsing the ABI.
+
+           # Workaround for ABIs that are missing the "outputs" field
            |> Map.put_new("outputs", []),
          true <- simple_types?(named_inputs, item),
          true <- simple_types?(named_outputs, item) do
