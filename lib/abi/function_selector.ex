@@ -311,25 +311,28 @@ defmodule ABI.FunctionSelector do
     end
   end
 
-  def replace_tuple({:array, inner}, sub_types) do
+  defp replace_tuple({:array, inner}, sub_types) do
     {:array, replace_tuple(inner, sub_types)}
   end
 
-  def replace_tuple({:array, inner, size}, sub_types) do
+  defp replace_tuple({:array, inner, size}, sub_types) do
     {:array, replace_tuple(inner, sub_types), size}
   end
 
-  def replace_tuple(:tuple, sub_types) do
+  defp replace_tuple(:tuple, sub_types) do
     {:tuple, sub_types}
   end
 
-  def replace_tuple(other, _) do
+  defp replace_tuple(other, _) do
     other
   end
 
   def parse_specification_type(%{"type" => "tuple" <> _ = type, "components" => components}) do
     sub_types = for component <- components, do: parse_specification_type(component)
-    decode_type(type) |> replace_tuple(sub_types)
+
+    type
+    |> decode_type()
+    |> replace_tuple(sub_types)
   end
 
   def parse_specification_type(%{"type" => type}), do: decode_type(type)
