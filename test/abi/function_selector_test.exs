@@ -345,6 +345,38 @@ defmodule ABI.FunctionSelectorTest do
       assert expected_type == selector.types
     end
 
+    test "parses fixed 2D array of tuples" do
+      function = %{
+        "inputs" => [],
+        "name" => "createTupleArray",
+        "outputs" => [
+          %{
+            "components" => [
+              %{
+                "internalType" => "uint256",
+                "name" => "element1",
+                "type" => "uint256"
+              },
+              %{"internalType" => "bool", "name" => "element2", "type" => "bool"}
+            ],
+            "internalType" => "struct StorageB.MyTuple[2][]",
+            "name" => "",
+            "type" => "tuple[2][]"
+          }
+        ],
+        "stateMutability" => "pure",
+        "type" => "function"
+      }
+
+      expected = [
+        array: {:array, {:tuple, [{:uint, 256}, :bool]}, 2}
+      ]
+
+      selector = FunctionSelector.parse_specification_item(function)
+
+      assert expected == selector.returns
+    end
+
     test "with stateMutability set" do
       ~w(pure view nonpayable payable)
       |> Enum.zip(~w(pure view non_payable payable)a)
