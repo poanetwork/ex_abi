@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.7.2
+* Update ex_keccak to 0.7.5 (https://github.com/poanetwork/ex_abi/pull/166)
 ## 0.7.1
 * Fix parsing of nested tuples (https://github.com/poanetwork/ex_abi/pull/164)
 * Fix parsing of functions the outputs field (https://github.com/poanetwork/ex_abi/pull/163)
