@@ -244,11 +244,12 @@ defmodule ABI.TypeEncoder do
   defp encode_method_id(%FunctionSelector{function: nil}), do: ""
 
   defp encode_method_id(function_selector) do
+    keccak_module = Application.get_env(:ex_abi, :keccak_module, ExKeccak)
     # Encode selector e.g. "baz(uint32,bool)" and take keccak
     kec =
       function_selector
       |> FunctionSelector.encode()
-      |> ExKeccak.hash_256()
+      |> keccak_module.hash_256()
 
     # Take first four bytes
     <<init::binary-size(4), _rest::binary>> = kec

@@ -403,8 +403,9 @@ defmodule ABI.FunctionSelector do
 
   defp add_method_id(selector) do
     signature = encode(selector)
+    keccak_module = Application.get_env(:ex_abi, :keccak_module, ExKeccak)
 
-    case ExKeccak.hash_256(signature) do
+    case keccak_module.hash_256(signature) do
       <<method_id::binary-size(4), _::binary>> ->
         %{selector | method_id: method_id}
 
@@ -414,9 +415,10 @@ defmodule ABI.FunctionSelector do
   end
 
   defp add_event_id(selector) do
+    keccak_module = Application.get_env(:ex_abi, :keccak_module, ExKeccak)
     signature = encode(selector)
 
-    %{selector | method_id: ExKeccak.hash_256(signature)}
+    %{selector | method_id: keccak_module.hash_256(signature)}
   end
 
   defp get_types(function_selector) do

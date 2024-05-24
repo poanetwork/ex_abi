@@ -19,6 +19,14 @@ Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_do
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/ex_abi](https://hexdocs.pm/ex_abi).
 
+## Confiiguration
+
+The default keccak library is set to `ex_keccak` but that can be ovveriden for a different libary:
+
+```elixir
+config :ex_abi, keccak_module: KeccakEx
+```
+
 ## Usage
 
 ### Encoding
