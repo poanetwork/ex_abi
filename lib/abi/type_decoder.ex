@@ -253,7 +253,7 @@ defmodule ABI.TypeDecoder do
   end
 
   defp decode_type({:array, type, size}, data) do
-    types = List.duplicate(type, size)
+    types = Stream.repeatedly(fn -> type end) |> Stream.take(size)
     {tuple, bytes} = decode_type({:tuple, types}, data)
 
     {Tuple.to_list(tuple), bytes}
@@ -300,7 +300,7 @@ defmodule ABI.TypeDecoder do
     <<_padding::binary-size(offset), rest_data::binary>> = full_data
     {count, bytes} = decode_uint(rest_data, 256)
 
-    types = List.duplicate(type, count)
+    types = Stream.repeatedly(fn -> type end) |> Stream.take(count)
 
     {tuple, _bytes} = decode_type({:tuple, types}, bytes)
     {Tuple.to_list(tuple), rest_bytes}
@@ -310,7 +310,7 @@ defmodule ABI.TypeDecoder do
     {offset, rest_bytes} = decode_uint(data, 256)
     <<_padding::binary-size(offset), rest_data::binary>> = full_data
 
-    types = List.duplicate(type, size)
+    types = Stream.repeatedly(fn -> type end) |> Stream.take(size)
 
     {tuple, _} = decode_type({:tuple, types}, rest_data)
 
