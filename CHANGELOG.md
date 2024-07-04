@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.7.3
+* Fix type decoder to use lazy stream instead of pre-allocated list (https://github.com/poanetwork/ex_abi/pull/170)
 ## 0.7.2
 * Update ex_keccak to 0.7.5 (https://github.com/poanetwork/ex_abi/pull/166)
 ## 0.7.1
