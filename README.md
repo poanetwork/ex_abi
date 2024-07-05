@@ -5,12 +5,13 @@ The [Application Binary Interface](https://solidity.readthedocs.io/en/develop/ab
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `ex_abi` to your list of dependencies in `mix.exs`:
+by adding `ex_abi` and `ex_keccak` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:ex_abi, "~> 0.7.3"}
+    {:ex_abi, "~> 0.8.0"},
+    {:ex_keccak, "~> 0.7.5"}
   ]
 end
 ```
@@ -21,11 +22,13 @@ be found at [https://hexdocs.pm/ex_abi](https://hexdocs.pm/ex_abi).
 
 ## Confiiguration
 
-The default keccak library is set to `ex_keccak` but that can be ovveriden for a different libary:
+The default keccak library is set to `ex_keccak` but that can be overridden with a different module. The module should implement one function `hash_256/1`.
 
 ```elixir
-config :ex_abi, keccak_module: KeccakEx
+config :ex_abi, keccak_module: MyCustomKeccak
 ```
+
+If you're going to use a custom module, you should remove `ex_keccak` from deps in `mix.exs`.
 
 ## Usage
 
