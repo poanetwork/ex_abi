@@ -757,6 +757,22 @@ defmodule ABI.TypeDecoderTest do
         TypeDecoder.decode(data, selector)
       end
     end
+
+    test "decodes output that matches signature" do
+      selector = %FunctionSelector{
+        function: "baz",
+        method_id: <<199, 158, 242, 32>>,
+        types: [
+          {:int, 8},
+          {:int, 256}
+        ],
+        returns: [{:bytes, 4}]
+      }
+
+      result_to_decode = TypeEncoder.encode([selector.method_id], [{:bytes, 4}])
+
+      assert TypeDecoder.decode(result_to_decode, selector, :output) == [selector.method_id]
+    end
   end
 
   describe "with examples from solidity docs" do
