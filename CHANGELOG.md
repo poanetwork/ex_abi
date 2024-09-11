@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.8.1
+* fix return value is the function signature (https://github.com/poanetwork/ex_abi/pull/174)
 ## 0.8.0
 * make keccak module configurable (https://github.com/poanetwork/ex_abi/pull/169)
 ## 0.7.3
