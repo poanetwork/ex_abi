@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.8.2
+* add compiler yecc and leex to fix warnings (https://github.com/poanetwork/ex_abi/pull/177)
+* update ex_keccak to 0.7.6 (https://github.com/poanetwork/ex_abi/pull/178)
 ## 0.8.1
 * fix return value is the function signature (https://github.com/poanetwork/ex_abi/pull/174)
 ## 0.8.0
