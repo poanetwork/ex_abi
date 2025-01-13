@@ -15,6 +15,7 @@ defmodule ABI.Mixfile do
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      compilers: [:yecc, :leex] ++ Mix.compilers(),
       dialyzer: dialyzer()
     ]
   end
