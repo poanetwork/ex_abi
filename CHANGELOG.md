@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.8.3
+* use `jason` only in dev and test envs (https://github.com/poanetwork/ex_abi/pull/180)
 ## 0.8.2
 * add compiler yecc and leex to fix warnings (https://github.com/poanetwork/ex_abi/pull/177)
 * update ex_keccak to 0.7.6 (https://github.com/poanetwork/ex_abi/pull/178)
