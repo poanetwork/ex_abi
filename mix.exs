@@ -33,7 +33,7 @@ defmodule ABI.Mixfile do
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.24", only: :dev, runtime: false},
-      {:jason, "~> 1.4"},
+      {:jason, "~> 1.4", only: [:test, :dev]},
       {:ex_keccak, "~> 0.7.6", optional: true},
       {:propcheck, "~> 1.4", only: [:test, :dev]}
     ]
