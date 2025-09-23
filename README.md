@@ -11,7 +11,7 @@ by adding `ex_abi` and `ex_keccak` to your list of dependencies in `mix.exs`:
 def deps do
   [
     {:ex_abi, "~> 0.8.3"},
-    {:ex_keccak, "~> 0.7.6"}
+    {:ex_keccak, "~> 0.7.8"}
   ]
 end
 ```
