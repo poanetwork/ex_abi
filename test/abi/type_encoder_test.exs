@@ -35,6 +35,42 @@ defmodule ABI.TypeEncoderTest do
       assert TypeDecoder.decode(expected_result, selector) == params
     end
 
+    test "encodes a `function` value right-padded in one word (like bytes24)" do
+      # 20-byte address ++ 4-byte selector
+      function_value =
+        Base.decode16!("29088eeb3082c897bebd16bbafc162322cbb1bf47cfdab90", case: :lower)
+
+      types = [:function]
+      params = [function_value]
+
+      result = TypeEncoder.encode(params, types)
+
+      expected_result =
+        "29088eeb3082c897bebd16bbafc162322cbb1bf47cfdab900000000000000000"
+        |> Base.decode16!(case: :lower)
+
+      assert expected_result == result
+      assert TypeDecoder.decode(expected_result, types) == params
+    end
+
+    test "encodes a tuple containing a `function` component" do
+      function_value =
+        Base.decode16!("29088eeb3082c897bebd16bbafc162322cbb1bf47cfdab90", case: :lower)
+
+      types = [{:tuple, [{:uint, 256}, :function]}]
+      params = [{1337, function_value}]
+
+      result = TypeEncoder.encode(params, types)
+
+      expected_result =
+        ("0000000000000000000000000000000000000000000000000000000000000539" <>
+           "29088eeb3082c897bebd16bbafc162322cbb1bf47cfdab900000000000000000")
+        |> Base.decode16!(case: :lower)
+
+      assert expected_result == result
+      assert TypeDecoder.decode(expected_result, types) == params
+    end
+
     test "encodes [{:int, 256}, :bool]" do
       selector = %FunctionSelector{
         function: "baz",
