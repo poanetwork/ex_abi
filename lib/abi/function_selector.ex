@@ -68,7 +68,8 @@ defmodule ABI.FunctionSelector do
     "ufixed",
     "bytes",
     "string",
-    "tuple"
+    "tuple",
+    "function"
   ]
 
   @state_mutabilities %{

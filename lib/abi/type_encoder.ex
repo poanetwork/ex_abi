@@ -206,6 +206,12 @@ defmodule ABI.TypeEncoder do
     do_encode_type({:uint, 160}, data, static_acc, dynamic_acc, mode)
   end
 
+  # Solidity `function` type: 24 bytes (20-byte address + 4-byte selector),
+  # stored right-padded in a single 32-byte word, exactly like `bytes24`.
+  defp do_encode_type(:function, data, static_acc, dynamic_acc, mode) do
+    do_encode_type({:bytes, 24}, data, static_acc, dynamic_acc, mode)
+  end
+
   defp do_encode_type({:tuple, _types}, _, _, _, :packed) do
     raise RuntimeError, "Structs (tuples) are not supported in packed mode encoding"
   end

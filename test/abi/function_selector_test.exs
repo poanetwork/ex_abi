@@ -433,6 +433,36 @@ defmodule ABI.FunctionSelectorTest do
                  FunctionSelector.parse_specification_item(function)
       end)
     end
+
+    test "parses event with a tuple containing a `function` component" do
+      event = %{
+        "anonymous" => false,
+        "name" => "ActionLogged",
+        "type" => "event",
+        "inputs" => [
+          %{
+            "indexed" => false,
+            "internalType" => "struct StructWithFunctionEvent.Action",
+            "name" => "action",
+            "type" => "tuple",
+            "components" => [
+              %{"internalType" => "uint256", "name" => "id", "type" => "uint256"},
+              %{
+                "internalType" => "function (uint256) external",
+                "name" => "callback",
+                "type" => "function"
+              }
+            ]
+          }
+        ]
+      }
+
+      assert %FunctionSelector{
+               function: "ActionLogged",
+               type: :event,
+               types: [{:tuple, [{:uint, 256}, :function]}]
+             } = FunctionSelector.parse_specification_item(event)
+    end
   end
 
   describe "simple_types?/1" do

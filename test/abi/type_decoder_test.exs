@@ -38,6 +38,27 @@ defmodule ABI.TypeDecoderTest do
       assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
     end
 
+    test "with a `function` value (24-byte address + selector)" do
+      types = [:function]
+
+      # 20-byte address ++ 4-byte selector
+      function_value =
+        Base.decode16!("29088eeb3082c897bebd16bbafc162322cbb1bf47cfdab90", case: :lower)
+
+      result = [function_value]
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
+    end
+
+    test "with a tuple containing a `function` component" do
+      types = [{:tuple, [{:uint, 256}, :function]}]
+
+      function_value =
+        Base.decode16!("29088eeb3082c897bebd16bbafc162322cbb1bf47cfdab90", case: :lower)
+
+      result = [{1337, function_value}]
+      assert result == TypeEncoder.encode(result, types) |> TypeDecoder.decode(types)
+    end
+
     test "with dynamic array data" do
       types = [{:array, :address}]
       result = [[]]

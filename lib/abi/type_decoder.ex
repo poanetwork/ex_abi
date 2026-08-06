@@ -290,6 +290,10 @@ defmodule ABI.TypeDecoder do
 
   defp decode_type(:address, data), do: decode_bytes(data, 20, :left)
 
+  # Solidity `function` type: 24 bytes (20-byte address + 4-byte selector),
+  # stored right-padded in a single 32-byte word, exactly like `bytes24`.
+  defp decode_type(:function, data), do: decode_type({:bytes, 24}, data)
+
   defp decode_type(:bool, data) do
     {encoded_value, rest} = decode_uint(data, 8)
 
