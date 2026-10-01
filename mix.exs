@@ -4,12 +4,12 @@ defmodule ABI.Mixfile do
   def project do
     [
       app: :ex_abi,
-      version: "0.8.4",
+      version: "0.8.5",
       elixir: "~> 1.8",
       description: "Ethereum's ABI Interface",
       package: [
         maintainers: ["Ayrat Badykov, Victor Baranov"],
-        licenses: ["GPL-3.0"],
+        licenses: ["Apache 2.0"],
         links: %{"GitHub" => "https://github.com/poanetwork/ex_abi"}
       ],
       build_embedded: Mix.env() == :prod,
