@@ -10,53 +10,46 @@ jobs:
   ci:
     env:
       MIX_ENV: test
+      # OTP 24 has no built-in CA store. rustler_precompiled 0.10 needs one to download the ex_keccak NIF.
+      HEX_CACERTS_PATH: /etc/ssl/certs/ca-certificates.crt
     strategy:
       fail-fast: false
       matrix:
         include:
           - pair:
-              elixir: 1.14.5
+              elixir: 1.16.3
               otp: 24.3.4
           - pair:
-              elixir: 1.15.7
-              otp: 24.3.4
-          - pair:
-              elixir: 1.16.1
-              otp: 24.3.4
-          - pair:
-              elixir: 1.14.5
+              elixir: 1.16.3
               otp: 25.3.2
           - pair:
-              elixir: 1.15.7
-              otp: 25.3.2
-          - pair:
-              elixir: 1.16.1
-              otp: 25.3.2
-          - pair:
-              elixir: 1.14.5
-              otp: 26.2.2
-          - pair:
-              elixir: 1.15.7
-              otp: 26.2.2
-          - pair:
-              elixir: 1.16.1
+              elixir: 1.16.3
               otp: 26.2.2
             lint: lint
           - pair:
               elixir: 1.17.3
               otp: 27.2
+          - pair:
+              elixir: 1.18.5
+              otp: 27.3.4.18
+          - pair:
+              elixir: 1.19.6
+              otp: 28.5.0.7
+          - pair:
+              elixir: 1.20.4
+              otp: 29.1.1
 
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v7
 
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@v1.24.1
         with:
           otp-version: ${{matrix.pair.otp}}
           elixir-version: ${{matrix.pair.elixir}}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v6
         with:
           path: |
             deps
