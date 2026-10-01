@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.8.5
+* change license to Apache 2.0
 ## 0.8.4
 * support the Solidity `function` ABI type in parsing, encoding and decoding (https://github.com/poanetwork/ex_abi/pull/183)
 ## 0.8.3
