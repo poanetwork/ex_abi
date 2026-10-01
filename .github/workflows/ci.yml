@@ -10,6 +10,8 @@ jobs:
   ci:
     env:
       MIX_ENV: test
+      # OTP 24 has no built-in CA store. rustler_precompiled 0.10 needs one to download the ex_keccak NIF.
+      HEX_CACERTS_PATH: /etc/ssl/certs/ca-certificates.crt
     strategy:
       fail-fast: false
       matrix:
