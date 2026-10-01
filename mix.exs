@@ -9,7 +9,7 @@ defmodule ABI.Mixfile do
       description: "Ethereum's ABI Interface",
       package: [
         maintainers: ["Ayrat Badykov, Victor Baranov"],
-        licenses: ["Apache 2.0"],
+        licenses: ["Apache-2.0"],
         links: %{"GitHub" => "https://github.com/poanetwork/ex_abi"}
       ],
       build_embedded: Mix.env() == :prod,
