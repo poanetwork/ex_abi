@@ -2,6 +2,7 @@
 
 ## 0.8.5
 * change license to Apache 2.0
+* update development dependencies (credo 1.7.19, dialyxir 1.4.8, ex_doc 0.40.4, jason 1.4.5)
 ## 0.8.4
 * support the Solidity `function` ABI type in parsing, encoding and decoding (https://github.com/poanetwork/ex_abi/pull/183)
 ## 0.8.3

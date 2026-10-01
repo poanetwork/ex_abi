@@ -15,31 +15,13 @@ jobs:
       matrix:
         include:
           - pair:
-              elixir: 1.14.5
+              elixir: 1.16.3
               otp: 24.3.4
           - pair:
-              elixir: 1.15.7
-              otp: 24.3.4
-          - pair:
-              elixir: 1.16.1
-              otp: 24.3.4
-          - pair:
-              elixir: 1.14.5
+              elixir: 1.16.3
               otp: 25.3.2
           - pair:
-              elixir: 1.15.7
-              otp: 25.3.2
-          - pair:
-              elixir: 1.16.1
-              otp: 25.3.2
-          - pair:
-              elixir: 1.14.5
-              otp: 26.2.2
-          - pair:
-              elixir: 1.15.7
-              otp: 26.2.2
-          - pair:
-              elixir: 1.16.1
+              elixir: 1.16.3
               otp: 26.2.2
             lint: lint
           - pair:
@@ -49,14 +31,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v7
 
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@v1.24.1
         with:
           otp-version: ${{matrix.pair.otp}}
           elixir-version: ${{matrix.pair.elixir}}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v6
         with:
           path: |
             deps
